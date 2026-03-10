@@ -37,8 +37,8 @@ const CourtCalendar = () => {
     if (!mappedEvents[day]) mappedEvents[day] = [];
     mappedEvents[day].push({
       title: event.title,
-      color: event.type === 'Court Date' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 
-             event.type === 'Meeting' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-slate-700/50 text-slate-300 border border-slate-600/50',
+      color: event.type === 'Court Date' ? 'bg-status-overdue/10 text-status-overdue border-l-2 border-l-status-overdue' : 
+             event.type === 'Meeting' ? 'bg-blue-50 text-blue-600 border-l-2 border-l-blue-500' : 'bg-gray-100 text-gray-600 border-l-2 border-l-gray-400',
       ...event
     });
   });
@@ -58,23 +58,23 @@ const CourtCalendar = () => {
   const calendarDays = generateCalendarDays();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Court Calendar</h1>
-          <p className="text-slate-400 mt-1">Track hearings, deadlines, and client meetings.</p>
+          <h1 className="text-3xl font-bold text-apple-text tracking-tight">Court Calendar</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">Track hearings, deadlines, and client meetings.</p>
         </div>
-        <div className="flex gap-4">
-          <div className="flex bg-slate-900/60 backdrop-blur-md p-1 rounded-xl border border-slate-700/50">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex bg-gray-100 p-1 rounded-xl">
             <button 
               onClick={() => setViewMode('shared')}
-              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'shared' ? 'bg-slate-700 shadow-[0_0_10px_rgba(0,0,0,0.3)] text-blue-400 border border-slate-600' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'shared' ? 'bg-white shadow-sm text-apple-text' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <UsersIcon className="w-4 h-4" /> Shared
             </button>
             <button 
               onClick={() => setViewMode('personal')}
-              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-slate-700 shadow-[0_0_10px_rgba(0,0,0,0.3)] text-blue-400 border border-slate-600' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}`}
+              className={`flex items-center gap-2 px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${viewMode === 'personal' ? 'bg-white shadow-sm text-apple-text' : 'text-gray-500 hover:text-gray-700'}`}
             >
               <User className="w-4 h-4" /> My Events
             </button>
@@ -85,39 +85,38 @@ const CourtCalendar = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-12 gap-5">
-        <div className="col-span-9 card p-5 overflow-hidden">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-white tracking-wide">{currentMonth}</h2>
-            <div className="flex items-center gap-3">
-              <button className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors border border-transparent hover:border-slate-700"><ChevronLeft className="w-5 h-5" /></button>
-              <button className="px-4 py-1.5 text-xs font-bold text-slate-200 tracking-wide uppercase bg-slate-800/50 hover:bg-slate-700 rounded-lg border border-slate-700/50 transition-colors">Today</button>
-              <button className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 transition-colors border border-transparent hover:border-slate-700"><ChevronRight className="w-5 h-5" /></button>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+        <div className="col-span-1 xl:col-span-9 card p-6">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-apple-text tracking-tight">{currentMonth}</h2>
+            <div className="flex items-center gap-2">
+              <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+              <button className="px-4 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Today</button>
+              <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 mb-2 bg-slate-800/40 rounded-t-xl border border-slate-700/50">
+          <div className="grid grid-cols-7 mb-2">
             {daysOfWeek.map((day) => (
-              <div key={day} className="text-center text-[10px] font-bold text-slate-400 uppercase py-3 tracking-widest">{day}</div>
+              <div key={day} className="text-center text-[10px] font-bold text-gray-400 uppercase py-2 tracking-widest">{day}</div>
             ))}
           </div>
 
           {loading ? (
-            <div className="flex justify-center p-20 border border-slate-800 border-t-0 rounded-b-xl">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+            <div className="flex justify-center p-20 border-t border-gray-100">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
             </div>
           ) : (
-            <div className="grid grid-cols-7 border-l border-t border-slate-700/50 bg-slate-900/20 rounded-b-xl overflow-hidden">
+            <div className="grid grid-cols-7 border-t border-l border-gray-100 rounded-b-xl overflow-hidden bg-gray-50/30">
               {calendarDays.map((item, index) => (
-                <div key={index} className={`min-h-[110px] border-r border-b border-slate-700/50 p-2 transition-colors hover:bg-white/5 ${!item.isCurrentMonth ? 'bg-slate-900/60' : 'bg-transparent'}`}>
-                  <span className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded-full font-semibold ${!item.isCurrentMonth ? 'text-slate-600' : item.day === 14 ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.5)] text-white' : 'text-slate-300'}`}>
+                <div key={index} className={`min-h-[120px] border-r border-b border-gray-100 p-2 transition-colors hover:bg-gray-50 ${!item.isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'}`}>
+                  <span className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded-full font-bold ${!item.isCurrentMonth ? 'text-gray-400' : item.day === 14 ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-700'}`}>
                     {item.day}
                   </span>
                   {item.isCurrentMonth && mappedEvents[item.day] && (
-                    <div className="mt-1.5 space-y-1.5">
+                    <div className="mt-2 space-y-1.5">
                       {mappedEvents[item.day].map((event, idx) => (
-                        <div key={idx} className={`text-[10px] px-2 py-1 flex items-center gap-1.5 rounded-md truncate font-medium tracking-wide ${event.color}`} title={event.title}>
-                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70"></span>
+                        <div key={idx} className={`text-[10px] px-2 py-1 rounded truncate font-semibold ${event.color}`} title={event.title}>
                           {event.title}
                         </div>
                       ))}
@@ -129,23 +128,37 @@ const CourtCalendar = () => {
           )}
         </div>
 
-        <div className="col-span-3">
-          <div className="card p-5">
-            <h2 className="text-sm font-bold tracking-widest uppercase text-slate-400 mb-5 border-b border-slate-800 pb-3">Upcoming Events</h2>
-            <div className="space-y-4">
+        <div className="col-span-1 xl:col-span-3">
+          <div className="card">
+            <h2 className="text-[11px] font-bold tracking-widest uppercase text-gray-400 px-6 py-5 border-b border-gray-100 bg-gray-50/50 rounded-t-2xl">Upcoming Events</h2>
+            <div className="p-4 space-y-1">
               {sortedUpcomingEvents.map((event) => (
-                <div key={event._id} className="border-l-2 pl-4 py-2 hover:bg-white/5 rounded-r-xl transition-colors" style={{ borderColor: event.type === 'Court Date' ? '#ef4444' : event.type === 'Meeting' ? '#3b82f6' : '#94a3b8' }}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-100 truncate pr-2">{event.title}</h3>
-                    <span className="text-[10px] tracking-wide text-slate-500 font-bold uppercase">{new Date(event.start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <p className="text-[10px] tracking-widest uppercase font-semibold text-slate-400 flex items-center gap-1.5"><Clock className="w-3 h-3 text-slate-500" /> {new Date(event.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</p>
-                    <span className="text-[9px] uppercase font-bold tracking-widest bg-blue-500/10 border border-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded shadow-[0_0_5px_rgba(59,130,246,0.1)]">{event.createdBy?.name || 'Staff'}</span>
+                <div key={event._id} className="p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer group">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-1 h-10 rounded-full ${event.type === 'Court Date' ? 'bg-status-overdue' : event.type === 'Meeting' ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-sm font-semibold text-apple-text truncate pr-2 group-hover:text-primary-600 transition-colors">{event.title}</h3>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                           {new Date(event.start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-gray-400" /> 
+                          {new Date(event.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                        <span className="text-[9px] uppercase font-bold tracking-wider bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+                           {event.createdBy?.name || 'Staff'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
-              {sortedUpcomingEvents.length === 0 && <p className="text-center text-sm font-medium tracking-wide text-slate-500 py-10 bg-slate-800/20 rounded-xl border border-slate-800 border-dashed">No upcoming events</p>}
+              {sortedUpcomingEvents.length === 0 && (
+                <p className="text-center text-sm font-medium text-gray-500 py-10">No upcoming events.</p>
+              )}
             </div>
           </div>
         </div>

@@ -37,12 +37,12 @@ const Documents = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Document Management</h1>
-          <p className="text-slate-400 mt-1">Secure storage for legal filings, evidence, and contracts.</p>
+          <h1 className="text-3xl font-bold text-apple-text tracking-tight">Document Repository</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">Secure storage and retrieval for all firm documentation.</p>
         </div>
         <button className="btn-primary" onClick={handleUpload}>
           <Upload className="w-4 h-4" />
@@ -50,31 +50,31 @@ const Documents = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        {/* Categories Sidebar */}
-        <div className="col-span-12 md:col-span-3 space-y-6">
-          <div className="card p-5">
-            <h2 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 px-2">Folders</h2>
-            <div className="space-y-1.5">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Sidebar / Folders */}
+        <div className="col-span-1 lg:col-span-3 space-y-6">
+          <div className="card p-6">
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-4 ml-2">Collections</h2>
+            <div className="space-y-1">
               {categories.map((cat) => (
                 <button
                   key={cat.name}
                   onClick={() => setActiveCategory(cat.name)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm transition-all group border ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all group ${
                     activeCategory === cat.name
-                      ? 'bg-blue-600/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.15)]'
-                      : 'text-slate-300 border-transparent hover:bg-slate-800/50 hover:border-slate-700 hover:text-white'
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-apple-text'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <FolderOpen className={`w-4 h-4 ${activeCategory === cat.name ? 'text-blue-400' : 'text-slate-500 group-hover:text-slate-400'}`} />
-                    <span className="font-semibold tracking-wide">{cat.name}</span>
+                    <FolderOpen className={`w-4 h-4 ${activeCategory === cat.name ? 'text-primary-500' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                    <span>{cat.name}</span>
                   </div>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded shadow-sm font-bold tracking-widest ${
+                    className={`text-[10px] px-2 py-0.5 rounded-md font-bold tracking-wider ${
                       activeCategory === cat.name
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-800 text-slate-500'
+                        ? 'bg-primary-100 text-primary-700'
+                        : 'bg-gray-100 text-gray-500'
                     }`}
                   >
                     {cat.count}
@@ -84,89 +84,88 @@ const Documents = () => {
             </div>
           </div>
 
-          {/* Storage Usage */}
-          <div className="card p-5 relative overflow-hidden group">
-            <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-600/10 rounded-full blur-2xl group-hover:bg-blue-600/20 transition-all"></div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-slate-800/50 rounded-lg border border-slate-700">
-                <HardDrive className="w-4 h-4 text-blue-400" />
+          {/* Storage Usage Widget */}
+          <div className="card p-6 border-t-4 border-t-primary-500 rounded-t-sm">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <HardDrive className="w-4 h-4 text-gray-500" />
               </div>
-              <h2 className="text-sm font-bold text-white tracking-wide">Storage Usage</h2>
+              <h2 className="text-sm font-bold text-apple-text">Storage Usage</h2>
             </div>
             
-            <div className="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden mb-3 border border-slate-700/50">
-              <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full shadow-[0_0_10px_rgba(59,130,246,0.8)] relative" style={{ width: '65%' }}>
-                <div className="absolute top-0 right-0 bottom-0 w-4 bg-white/20"></div>
-              </div>
+            <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-3">
+              <div className="h-full bg-primary-500 rounded-full" style={{ width: '65%' }}></div>
             </div>
-            <p className="text-xs font-semibold text-slate-400 tracking-wide flex justify-between">
-              <span>6.5 GB used</span>
-              <span className="text-slate-500">10 GB total</span>
+            <p className="text-[11px] font-semibold text-gray-400 tracking-wider flex justify-between uppercase">
+              <span className="text-gray-600 text-xs">6.5 GB</span>
+              <span>10 GB Total</span>
             </p>
           </div>
         </div>
 
-        {/* Documents Table */}
-        <div className="col-span-12 md:col-span-9 card p-5 pb-0 overflow-hidden flex flex-col min-h-[500px]">
-          {/* Search and Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-5">
-            <div className="relative w-full sm:w-80 group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
-              <input
-                type="text"
-                placeholder="Search documents..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="futuristic-input pl-11"
-              />
+        {/* Documents Main Area */}
+        <div className="col-span-1 lg:col-span-9 card flex flex-col min-h-[600px] overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="relative w-full sm:w-96 group">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+                <input
+                  type="text"
+                  placeholder="Search documents by name or phrase..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="clean-input pl-11"
+                />
+              </div>
+              <button className="btn-outline w-full sm:w-auto">
+                <Filter className="w-4 h-4" />
+                Sort & Filter
+              </button>
             </div>
-            <button className="btn-outline w-full sm:w-auto">
-              <Filter className="w-4 h-4" />
-              Filters
-            </button>
           </div>
 
           {/* Table */}
           {loading ? (
-             <div className="flex justify-center items-center flex-1 p-10">
-               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+             <div className="flex justify-center items-center flex-1 p-20">
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
              </div>
           ) : (
-            <div className="overflow-x-auto flex-1 -mx-5">
-              <table className="w-full">
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-slate-700/50 bg-slate-900/40">
-                    <th className="table-header text-left py-4 px-5">Name</th>
-                    <th className="table-header text-left py-4 px-5">Related Case</th>
-                    <th className="table-header text-left py-4 px-5">Format</th>
-                    <th className="table-header text-left py-4 px-5">Date Modified</th>
-                    <th className="table-header text-right py-4 px-5">Actions</th>
+                  <tr className="border-b border-gray-100 bg-gray-50/50">
+                    <th className="table-header py-4 px-6">Name</th>
+                    <th className="table-header py-4 px-6">Related Case</th>
+                    <th className="table-header py-4 px-6">Format</th>
+                    <th className="table-header py-4 px-6">Date Modified</th>
+                    <th className="table-header py-4 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100">
                   {documents.map((doc) => (
-                    <tr key={doc._id} className="border-b border-slate-800/40 hover:bg-white/5 transition-colors group">
-                      <td className="py-4 px-5">
+                    <tr key={doc._id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer">
+                      <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20 group-hover:border-blue-500/40 transition-colors">
-                            <FileText className="w-4 h-4 text-blue-400" />
+                          <div className="p-2 bg-gray-50 group-hover:bg-white border border-gray-100 rounded-lg shadow-sm transition-colors">
+                            <FileText className="w-4 h-4 text-gray-500 group-hover:text-primary-500 transition-colors" />
                           </div>
-                          <span className="text-sm font-bold text-slate-200 group-hover:text-blue-400 transition-colors tracking-wide">{doc.title}</span>
+                          <span className="text-sm font-semibold text-apple-text group-hover:text-primary-600 transition-colors">{doc.title}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-5 text-sm font-medium text-slate-400">{doc.case?.title || 'Unknown'}</td>
-                      <td className="py-4 px-5">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 bg-slate-800 px-2 py-1 rounded shadow-sm border border-slate-700/50">{doc.format}</span>
+                      <td className="py-4 px-6 text-sm font-medium text-gray-500">{doc.case?.title || 'Unknown Default'}</td>
+                      <td className="py-4 px-6">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-2.5 py-1 rounded-md">{doc.format}</span>
                       </td>
-                      <td className="py-4 px-5">
-                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
-                          <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                          <Calendar className="w-3.5 h-3.5" />
                           {new Date(doc.updatedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </td>
-                      <td className="py-4 px-5">
+                      <td className="py-4 px-6">
                         <div className="flex items-center justify-end">
-                          <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white border border-transparent hover:border-white/10">
+                          <button className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
@@ -175,8 +174,8 @@ const Documents = () => {
                   ))}
                   {documents.length === 0 && (
                     <tr>
-                      <td colSpan="5" className="py-12 text-center text-sm font-medium text-slate-500">
-                        No documents found matching criteria.
+                      <td colSpan="5" className="py-20 text-center text-sm font-medium text-gray-500">
+                        No documents found in this collection.
                       </td>
                     </tr>
                   )}

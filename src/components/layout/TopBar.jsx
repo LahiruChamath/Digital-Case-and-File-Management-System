@@ -1,14 +1,15 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import Avatar from '../common/Avatar';
 
 const breadcrumbMap = {
-  '/dashboard': 'Dashboard',
+  '/dashboard': 'Dashboard Overview',
   '/matters': 'Matter Management',
-  '/clients': 'Clients',
-  '/calendar': 'Calendar',
-  '/documents': 'Documents',
-  '/expenses': 'Finance',
-  '/admin': 'Admin',
+  '/clients': 'Client Profiles',
+  '/calendar': 'Court Calendar',
+  '/documents': 'Document Repository',
+  '/expenses': 'Finance & Billing',
+  '/admin': 'System Administration',
 };
 
 const TopBar = () => {
@@ -16,23 +17,24 @@ const TopBar = () => {
   const currentPage = breadcrumbMap[location.pathname] || 'Dashboard';
 
   return (
-    <header className="h-14 bg-slate-900/40 backdrop-blur-xl border-b border-slate-800/50 flex items-center justify-between px-6 sticky top-0 z-40">
+    <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-40 transition-all">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-slate-400 font-medium tracking-widest text-[10px]">LAW FIRM MANAGEMENT SYSTEM</span>
-        <span className="text-slate-600">/</span>
-        <span className="text-slate-200 font-semibold">{currentPage}</span>
+        <span className="text-apple-textMuted font-semibold tracking-wider text-[11px] uppercase">LexSystem</span>
+        <span className="text-gray-300">/</span>
+        <span className="text-apple-text font-bold">{currentPage}</span>
       </div>
 
       {/* Right side */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-full border border-slate-700/50">
-          <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-          <span className="text-xs text-slate-300 font-medium tracking-wide">Practice Sync: Active</span>
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2.5 bg-gray-50 px-3 py-1.5 rounded-full border border-gray-200">
+          <span className="w-2 h-2 bg-status-active rounded-full relative">
+             <span className="absolute inset-0 bg-status-active rounded-full animate-ping opacity-75"></span>
+          </span>
+          <span className="text-[11px] text-gray-600 font-bold uppercase tracking-wider">System Online</span>
         </div>
-        <div className="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-600 shadow-[0_0_15px_rgba(79,70,229,0.4)] rounded-full flex items-center justify-center text-white text-sm font-semibold cursor-pointer hover:shadow-[0_0_20px_rgba(79,70,229,0.6)] transition-all">
-          JD
-        </div>
+        <div className="w-px h-6 bg-gray-200"></div>
+        <Avatar initials="JD" size="sm" />
       </div>
     </header>
   );

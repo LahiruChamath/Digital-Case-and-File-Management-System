@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Building2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Scale, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage = () => {
@@ -31,89 +31,87 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-[#0B1120]">
+    <div className="min-h-screen flex bg-apple-bg">
       {/* Left Side - Login Form */}
-      <div className="w-1/2 flex items-center justify-center p-12 relative overflow-hidden">
-        {/* Abstract futuristic background glow */}
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-          <div className="absolute -top-1/4 -left-1/4 w-1/2 h-1/2 bg-blue-600/20 blur-[120px] rounded-full"></div>
-          <div className="absolute -bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-indigo-600/20 blur-[120px] rounded-full"></div>
-        </div>
-
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 relative">
         <div className="w-full max-w-md relative z-10">
           {/* Logo */}
-          <div className="flex items-center gap-4 mb-12 border border-slate-800 bg-slate-900/50 backdrop-blur-md p-4 rounded-2xl shadow-2xl">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)]">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <span className="block text-xl font-black tracking-wide text-white">LAW FIRM</span>
-              <span className="block text-xs font-bold tracking-widest uppercase text-blue-400">Management System</span>
+          <div className="flex justify-center mb-12">
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-14 h-14 bg-primary-500 rounded-2xl flex items-center justify-center shadow-apple-sm">
+                <Scale className="w-7 h-7 text-white" />
+              </div>
+              <div className="text-center">
+                <span className="block text-2xl font-bold tracking-tight text-apple-text">LexSystem</span>
+                <span className="block text-[11px] font-bold tracking-widest uppercase text-apple-textMuted mt-1">Law Firm Management</span>
+              </div>
             </div>
           </div>
 
           {/* Welcome Text */}
-          <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Access Portal</h1>
-          <p className="text-slate-400 mb-8 font-medium">Authenticate to enter the secure law firm workspace.</p>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-apple-text mb-2 tracking-tight">Welcome Back</h1>
+            <p className="text-gray-500 text-sm">Please enter your credentials to access the secure portal.</p>
+          </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Email Address</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Email Address</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="futuristic-input pl-12"
-                  placeholder="john.doe@firm-management.com"
+                  className="clean-input pl-12"
+                  placeholder="name@firm-management.com"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400">Password</label>
-                <button type="button" className="text-xs text-blue-400 hover:text-blue-300 font-bold tracking-wide transition-colors">
-                  Forgot?
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500">Password</label>
+                <button type="button" className="text-[11px] text-primary-500 hover:text-primary-600 font-bold tracking-wide transition-colors">
+                  Forgot Password?
                 </button>
               </div>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="futuristic-input pl-12 pr-12"
+                  className="clean-input pl-12 pr-12"
                   placeholder="••••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-blue-400 transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 py-2">
               <input
                 type="checkbox"
                 id="remember"
                 checked={formData.remember}
                 onChange={(e) => setFormData({ ...formData, remember: e.target.checked })}
-                className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-900"
+                className="w-4 h-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
               />
-              <label htmlFor="remember" className="text-sm font-medium text-slate-400">
-                Maintain active session
+              <label htmlFor="remember" className="text-sm text-gray-600 font-medium">
+                Keep me signed in
               </label>
             </div>
 
             {error && (
-              <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl shadow-[0_0_15px_rgba(239,68,68,0.1)] flex items-center gap-3">
-                <AlertCircle className="w-5 h-5" />
+              <div className="p-4 bg-red-50 border border-red-100 text-red-600 text-sm font-medium rounded-xl flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 {error}
               </div>
             )}
@@ -121,15 +119,15 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="btn-primary w-full py-3.5 text-base tracking-wide"
+              className="btn-primary w-full py-3.5 text-base"
             >
-              {isSubmitting ? 'Authenticating...' : 'Enter Workspace'}
+              {isSubmitting ? 'Authenticating...' : 'Sign In'}
             </button>
           </form>
 
-          <p className="text-center text-sm font-medium text-slate-500 mt-8">
-            System access requires authorization.{' '}
-            <button className="text-slate-300 font-bold hover:text-white transition-colors">
+          <p className="text-center text-sm text-gray-500 mt-8">
+            Access requires authorization.{' '}
+            <button className="text-apple-text font-semibold hover:underline transition-all">
               Request access
             </button>
           </p>
@@ -137,26 +135,23 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side - Image/Quote */}
-      <div className="w-1/2 relative flex items-end p-16 overflow-hidden bg-slate-900 border-l border-slate-800">
+      <div className="hidden lg:flex w-1/2 relative items-end p-16 overflow-hidden bg-gray-100">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-30 mix-blend-luminosity scale-105"
+          className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1589829545856-d10d557cf95f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80')`,
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent"></div>
+        <div className="absolute inset-0 bg-black/20"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
         
-        <div className="relative z-10 max-w-xl backdrop-blur-md bg-slate-900/40 p-10 rounded-3xl border border-white/10 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-          <div className="w-12 h-12 bg-blue-500/20 flex items-center justify-center rounded-2xl mb-8 border border-blue-500/30">
-            <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 24 24"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>
-          </div>
-          <blockquote className="text-white text-2xl font-bold leading-relaxed mb-8 tracking-wide">
-            "This management system has transformed how we handle our high-stakes litigation. The case
-            tracking and document storage are peerless."
+        <div className="relative z-10 max-w-xl">
+          <blockquote className="text-white text-3xl font-semibold leading-snug mb-8 tracking-tight">
+            "LexSystem defines the modern approach to legal management. The interface is remarkably intuitive and responsive."
           </blockquote>
           <div>
-            <p className="text-blue-400 font-black tracking-widest uppercase text-sm">Eleanor Vance</p>
-            <p className="text-slate-400 text-sm font-medium tracking-wide mt-1">Managing Partner, Vance & Associates</p>
+            <p className="text-white font-bold tracking-wide">Eleanor Vance</p>
+            <p className="text-gray-300 text-sm font-medium mt-1">Managing Partner, Vance & Associates</p>
           </div>
         </div>
       </div>

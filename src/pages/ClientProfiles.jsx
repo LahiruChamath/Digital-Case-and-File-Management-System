@@ -49,28 +49,28 @@ const ClientProfiles = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-wide">Client Profiles</h1>
-          <p className="text-slate-400 mt-1">Manage directory of individuals and corporate entities.</p>
+          <h1 className="text-3xl font-bold text-apple-text tracking-tight">Client Profiles</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">Manage your directory of individuals and corporate entities.</p>
         </div>
         <button className="btn-primary" onClick={handleAddClient}>
           <Plus className="w-4 h-4" />
-          Add New Client
+          Add Client
         </button>
       </div>
 
       {/* Search */}
-      <div className="card p-5">
-        <div className="relative max-w-lg group">
+      <div className="card p-6">
+        <div className="relative max-w-xl group">
           <input
             type="text"
             placeholder="Search clients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="futuristic-input"
+            className="clean-input"
           />
         </div>
       </div>
@@ -78,56 +78,51 @@ const ClientProfiles = () => {
       {/* Client Cards Grid */}
       {loading ? (
         <div className="flex justify-center p-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {clients.map((client) => (
-            <div key={client._id} className="card p-6 flex flex-col hover:-translate-y-1 transition-all duration-300 group">
+            <div key={client._id} className="card p-6 flex flex-col group hover:-translate-y-1 transition-transform duration-300">
               {/* Card Header */}
               <div className="flex items-start justify-between mb-5">
-                <div className="w-14 h-14 bg-gradient-to-tr from-slate-800 to-slate-700 text-white rounded-2xl flex items-center justify-center text-xl font-black shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-white/5">
-                  {client.name?.split(' ').map(n => n[0]).join('') || '??'}
-                </div>
-                <button className="p-2 hover:bg-white/10 rounded-xl transition-colors text-slate-500 hover:text-white">
+                <Avatar initials={client.name?.split(' ').map(n => n[0]).join('') || '??'} size="lg" />
+                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Client Info */}
-              <h3 className="text-lg font-bold text-slate-100 group-hover:text-blue-400 transition-colors">{client.name}</h3>
-              <p className="text-xs font-medium text-slate-400 mt-1 uppercase tracking-widest">{client.type}</p>
+              <h3 className="text-lg font-bold text-apple-text group-hover:text-primary-600 transition-colors">{client.name}</h3>
+              <p className="text-[11px] font-semibold text-gray-500 mt-1 uppercase tracking-wider">{client.type}</p>
 
               <div className="mt-6 flex-1 space-y-3">
-                <div className="flex items-center gap-3 text-sm text-slate-300 p-2 bg-slate-800/30 rounded-lg border border-transparent group-hover:border-slate-700/50 transition-colors">
-                  <Mail className="w-4 h-4 text-slate-500" />
+                <div className="flex items-center gap-3 text-sm text-gray-600 p-2.5 bg-gray-50 rounded-xl">
+                  <Mail className="w-4 h-4 text-gray-400" />
                   <span className="truncate font-medium">{client.email}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-slate-300 p-2 bg-slate-800/30 rounded-lg border border-transparent group-hover:border-slate-700/50 transition-colors">
-                  <Phone className="w-4 h-4 text-slate-500" />
+                <div className="flex items-center gap-3 text-sm text-gray-600 p-2.5 bg-gray-50 rounded-xl">
+                  <Phone className="w-4 h-4 text-gray-400" />
                   <span className="font-medium">{client.phone || 'No phone'}</span>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="mt-6 pt-5 border-t border-slate-700/50">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Logs</p>
-                    <p className="text-xl font-black text-white">{client.communicationHistory?.length || 0}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => { setSelectedClient(client); setIsLogModalOpen(true); }}
-                      className="text-xs font-bold uppercase tracking-widest bg-slate-800 text-blue-400 hover:text-white px-3 py-1.5 rounded-lg border border-blue-500/20 hover:border-blue-400/50 transition-all shadow-[0_0_10px_rgba(59,130,246,0.1)] hover:shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:bg-slate-700"
-                    >
-                      Log
-                    </button>
-                    <button className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
-                      View
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+              <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Logs</p>
+                  <p className="text-xl font-bold text-apple-text">{client.communicationHistory?.length || 0}</p>
+                </div>
+                <div className="flex gap-2.5">
+                  <button 
+                    onClick={() => { setSelectedClient(client); setIsLogModalOpen(true); }}
+                    className="text-[11px] font-bold uppercase tracking-wider bg-primary-50 text-primary-600 hover:bg-primary-500 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Log
+                  </button>
+                  <button className="flex items-center justify-center p-2 text-gray-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -137,35 +132,38 @@ const ClientProfiles = () => {
 
       {/* Log Communication Modal */}
       {isLogModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-md border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-            <h2 className="text-xl font-bold mb-6 text-white tracking-wide">Log Communication<br/><span className="text-blue-400 text-sm font-medium">{selectedClient?.name}</span></h2>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">
+              Log Communication<br/>
+              <span className="text-gray-500 text-sm font-medium mt-1 inline-block">{selectedClient?.name}</span>
+            </h2>
             <form onSubmit={handleLogCommunication} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Type</label>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Type</label>
                 <select 
-                  className="futuristic-input"
+                  className="clean-input"
                   value={commForm.type}
                   onChange={e => setCommForm({...commForm, type: e.target.value})}
                 >
-                  <option className="bg-slate-800 text-white">Email</option>
-                  <option className="bg-slate-800 text-white">Phone call</option>
-                  <option className="bg-slate-800 text-white">Meeting</option>
-                  <option className="bg-slate-800 text-white">Other</option>
+                  <option>Email</option>
+                  <option>Phone call</option>
+                  <option>Meeting</option>
+                  <option>Other</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Summary</label>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Summary</label>
                 <textarea 
-                  className="futuristic-input h-32 resize-none"
+                  className="clean-input h-32 resize-none"
                   placeholder="What was discussed?"
                   required
                   value={commForm.summary}
                   onChange={e => setCommForm({...commForm, summary: e.target.value})}
                 />
               </div>
-              <div className="flex justify-end gap-4 pt-4 mt-2 border-t border-slate-700/50">
-                <button type="button" onClick={() => setIsLogModalOpen(false)} className="text-sm font-bold tracking-wide text-slate-400 hover:text-white transition-colors">Cancel</button>
+              <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsLogModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
                 <button type="submit" className="btn-primary">Save Log</button>
               </div>
             </form>

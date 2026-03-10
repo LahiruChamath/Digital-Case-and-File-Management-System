@@ -7,7 +7,7 @@ const Case = require('../models/Case');
 // @access  Private
 exports.createEvent = async (req, res) => {
   try {
-    const event = await Event.create(req.body);
+    const event = await Event.create({ ...req.body, createdBy: req.user._id });
     res.status(201).json(event);
   } catch (error) {
     res.status(500).json({ message: 'Failed to schedule event', error: error.message });
@@ -19,7 +19,7 @@ exports.createEvent = async (req, res) => {
 // @access  Private
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find().populate('case', 'title id');
+    const events = await Event.find().populate('case', 'title id').populate('createdBy', 'name');
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch events', error: error.message });

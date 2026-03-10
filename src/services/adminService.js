@@ -14,5 +14,15 @@ export const adminService = {
   getSystemHealth: async () => {
     const { data } = await api.get('/admin/system/health');
     return data;
+  },
+
+  triggerBackup: async () => {
+    const { data } = await api.post('/admin/backup');
+    return data;
+  },
+
+  getBackups: async () => {
+    const { data } = await api.get('/admin/backups');
+    return data;
   }
 };

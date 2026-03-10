@@ -59,62 +59,74 @@ const ClientProfiles = () => {
           <h1 className="text-2xl font-bold text-slate-900">Client Profiles</h1>
           <p className="text-slate-500 mt-1">Manage directory of individuals and corporate entities.</p>
         </div>
-        <button className="btn-primary">
+        <button className="btn-primary" onClick={handleAddClient}>
           <Plus className="w-4 h-4" />
           Add New Client
         </button>
       </div>
 
+      {/* Search */}
+      <div className="card p-4">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-4 pr-10 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
       {/* Client Cards Grid */}
-      <div className="grid grid-cols-3 gap-5">
-        {clientsData.map((client) => (
-          <div key={client.name} className="card p-5 hover:shadow-md transition-shadow">
-            {/* Card Header */}
-            <div className="flex items-start justify-between mb-4">
-              <Avatar initials={client.initials} size="lg" />
-              <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors text-slate-400">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Client Info */}
-            <h3 className="text-base font-semibold text-slate-900">{client.name}</h3>
-            <p className="text-sm text-slate-500 mt-0.5">{client.type}</p>
-
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Mail className="w-4 h-4 text-slate-400" />
-                <span>{client.email}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Phone className="w-4 h-4 text-slate-400" />
-                <span>{client.phone}</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-5 pt-4 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-medium">Active Cases</p>
-                  <p className="text-lg font-bold text-slate-900">{client.activeCases}</p>
-                </div>
-                <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  View Profile
-                  <ExternalLink className="w-3.5 h-3.5" />
+      {loading ? (
+        <div className="flex justify-center p-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {clients.map((client) => (
+            <div key={client._id} className="card p-5 hover:shadow-md transition-shadow">
+              {/* Card Header */}
+              <div className="flex items-start justify-between mb-4">
+                <Avatar initials={client.name?.split(' ').map(n => n[0]).join('') || '??'} size="lg" />
+                <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors text-slate-400">
+                  <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
-              {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                  style={{ width: `${client.progress}%` }}
-                ></div>
+
+              {/* Client Info */}
+              <h3 className="text-base font-semibold text-slate-900">{client.name}</h3>
+              <p className="text-sm text-slate-500 mt-0.5">{client.type}</p>
+
+              <div className="mt-4 space-y-2">
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  <span className="truncate">{client.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Phone className="w-4 h-4 text-slate-400" />
+                  <span>{client.phone || 'No phone'}</span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-5 pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-slate-500 uppercase font-medium">Communication Logs</p>
+                    <p className="text-lg font-bold text-slate-900">{client.communicationHistory?.length || 0}</p>
+                  </div>
+                  <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

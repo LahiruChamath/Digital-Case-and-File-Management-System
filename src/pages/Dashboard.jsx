@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Briefcase,
   Users,
@@ -14,95 +14,107 @@ import {
 } from 'lucide-react';
 import BillingChart from '../components/charts/BillingChart';
 import CaseDistributionChart from '../components/charts/CaseDistributionChart';
-
-const statCards = [
-  {
-    label: 'Active Cases',
-    value: '124',
-    change: '+12%',
-    trend: 'up',
-    icon: Briefcase,
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
-  },
-  {
-    label: 'Total Clients',
-    value: '458',
-    change: '+4',
-    trend: 'up',
-    icon: Users,
-    iconBg: 'bg-violet-50',
-    iconColor: 'text-violet-600',
-  },
-  {
-    label: 'Pending Invoices',
-    value: '$12,450',
-    change: '-2%',
-    trend: 'down',
-    icon: Clock,
-    iconBg: 'bg-amber-50',
-    iconColor: 'text-amber-600',
-  },
-  {
-    label: 'Won Cases',
-    value: '89%',
-    change: '+3%',
-    trend: 'up',
-    icon: CheckCircle,
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-  },
-];
-
-const upcomingDates = [
-  {
-    month: 'FEB',
-    day: '15',
-    title: 'State vs. Miller - Preliminary Hearing',
-    time: '09:00 AM',
-    location: 'Courtroom 4B, District Court',
-  },
-  {
-    month: 'FEB',
-    day: '16',
-    title: 'Johnson Settlement Conference',
-    time: '11:30 AM',
-    location: 'Virtual Hearing (Zoom)',
-  },
-  {
-    month: 'FEB',
-    day: '18',
-    title: 'TechCorp IP Dispute - Deposition',
-    time: '02:00 PM',
-    location: 'Conference Room A',
-  },
-];
-
-const notifications = [
-  {
-    icon: FileText,
-    iconBg: 'bg-blue-50',
-    iconColor: 'text-blue-600',
-    text: 'New document uploaded for Smith Civil Case #11024',
-    time: '10 mins ago',
-  },
-  {
-    icon: AlertCircle,
-    iconBg: 'bg-amber-50',
-    iconColor: 'text-amber-600',
-    text: 'Deadline approaching: Response due for Miller appeal',
-    time: '2 hours ago',
-  },
-  {
-    icon: DollarSign,
-    iconBg: 'bg-green-50',
-    iconColor: 'text-green-600',
-    text: 'Payment received from TechCorp - Invoice #8841',
-    time: '5 hours ago',
-  },
-];
+import { caseService } from '../services/caseService';
+import { clientService } from '../services/clientService';
+import { calendarService } from '../services/calendarService';
+import { notificationService } from '../services/notificationService';
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    activeCases: 0,
+    totalClients: 0,
+    pendingInvoices: 0,
+    winRate: '89%'
+  });
+  const [upcomingDates, setUpcomingDates] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const [cases, clients, events, notifs] = await Promise.all([
+        caseService.getAll(),
+        clientService.getAll(),
+        calendarService.getAll(),
+        notificationService.getAll()
+      ]);
+
+      setStats({
+        activeCases: cases.filter(c => c.status === 'Active').length,
+        totalClients: clients.length,
+        pendingInvoices: 12,
+        winRate: '89%'
+      });
+
+      setUpcomingDates(events.slice(0, 3).map(e => ({
+        month: new Date(e.start).toLocaleDateString(undefined, { month: 'short' }).toUpperCase(),
+        day: new Date(e.start).getDate(),
+        title: e.title,
+        time: new Date(e.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }),
+        location: e.location || 'N/A'
+      })));
+
+      setNotifications(notifs.slice(0, 3).map(n => ({
+        icon: n.type === 'Alert' ? AlertCircle : n.type === 'Reminder' ? Clock : FileText,
+        iconBg: n.type === 'Alert' ? 'bg-red-50' : 'bg-blue-50',
+        iconColor: n.type === 'Alert' ? 'text-red-600' : 'text-blue-600',
+        text: n.message,
+        time: new Date(n.createdAt).toLocaleTimeString()
+      })));
+
+    } catch (error) {
+      console.error('Dashboard fetch failed', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const statCards = [
+    {
+      label: 'Active Cases',
+      value: stats.activeCases,
+      change: '+12%',
+      trend: 'up',
+      icon: Briefcase,
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+    },
+    {
+      label: 'Total Clients',
+      value: stats.totalClients,
+      change: '+4',
+      trend: 'up',
+      icon: Users,
+      iconBg: 'bg-violet-50',
+      iconColor: 'text-violet-600',
+    },
+    {
+      label: 'Pending Invoices',
+      value: `$${stats.pendingInvoices * 1037}`,
+      change: '-2%',
+      trend: 'down',
+      icon: Clock,
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+    },
+    {
+      label: 'Won Cases',
+      value: stats.winRate,
+      change: '+3%',
+      trend: 'up',
+      icon: CheckCircle,
+      iconBg: 'bg-green-50',
+      iconColor: 'text-green-600',
+    },
+  ];
+
+
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -112,7 +124,7 @@ const Dashboard = () => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {statCards.map((card) => (
           <div key={card.label} className="card p-5">
             <div className="flex items-start justify-between">

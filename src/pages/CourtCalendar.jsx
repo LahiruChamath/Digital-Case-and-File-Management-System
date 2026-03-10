@@ -96,41 +96,47 @@ const CourtCalendar = () => {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 border-t border-l border-slate-200">
-            {calendarDays.map((item, index) => (
-              <div
-                key={index}
-                className={`min-h-[100px] border-r border-b border-slate-200 p-2 ${
-                  !item.isCurrentMonth ? 'bg-slate-50' : 'bg-white'
-                }`}
-              >
-                <span
-                  className={`inline-flex items-center justify-center w-7 h-7 text-sm rounded-full ${
-                    !item.isCurrentMonth
-                      ? 'text-slate-400'
-                      : item.day === 14
-                      ? 'bg-blue-600 text-white font-semibold'
-                      : 'text-slate-700'
+          {loading ? (
+            <div className="flex justify-center p-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-7 border-t border-l border-slate-200">
+              {calendarDays.map((item, index) => (
+                <div
+                  key={index}
+                  className={`min-h-[100px] border-r border-b border-slate-200 p-2 ${
+                    !item.isCurrentMonth ? 'bg-slate-50' : 'bg-white'
                   }`}
                 >
-                  {item.day}
-                </span>
-                {/* Events */}
-                {item.isCurrentMonth && calendarEvents[item.day] && (
-                  <div className="mt-1 space-y-1">
-                    {calendarEvents[item.day].map((event, idx) => (
-                      <div
-                        key={idx}
-                        className={`text-xs px-1.5 py-0.5 rounded truncate ${event.color}`}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  <span
+                    className={`inline-flex items-center justify-center w-7 h-7 text-sm rounded-full ${
+                      !item.isCurrentMonth
+                        ? 'text-slate-400'
+                        : item.day === 14
+                        ? 'bg-blue-600 text-white font-semibold'
+                        : 'text-slate-700'
+                    }`}
+                  >
+                    {item.day}
+                  </span>
+                  {/* Events */}
+                  {item.isCurrentMonth && mappedEvents[item.day] && (
+                    <div className="mt-1 space-y-1">
+                      {mappedEvents[item.day].map((event, idx) => (
+                        <div
+                          key={idx}
+                          className={`text-xs px-1.5 py-0.5 rounded truncate ${event.color}`}
+                        >
+                          {event.title}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Upcoming Events Sidebar */}
@@ -138,23 +144,28 @@ const CourtCalendar = () => {
           <div className="card p-5">
             <h2 className="text-base font-semibold text-slate-900 mb-4">Upcoming Events</h2>
             <div className="space-y-4">
-              {upcomingEvents.map((event, index) => (
+              {sortedUpcomingEvents.map((event, index) => (
                 <div
-                  key={index}
-                  className={`border-l-3 ${event.borderColor} pl-3 py-1`}
+                  key={event._id}
+                  className={`border-l-3 border-l-blue-500 pl-3 py-1`}
                   style={{ borderLeftWidth: '3px' }}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-slate-900">{event.title}</h3>
-                    <span className="text-xs text-slate-500 font-medium">{event.date}</span>
+                    <h3 className="text-sm font-semibold text-slate-900 truncate pr-2">{event.title}</h3>
+                    <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
+                      {new Date(event.start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                    </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{event.subtitle}</p>
+                  <p className="text-xs text-slate-500 mt-0.5 truncate">{event.case?.title || 'General'}</p>
                   <div className="flex items-center gap-1 mt-1 text-xs text-slate-400">
                     <Clock className="w-3 h-3" />
-                    {event.time}
+                    {new Date(event.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               ))}
+              {sortedUpcomingEvents.length === 0 && (
+                <p className="text-center text-sm text-slate-500 py-10">No upcoming events</p>
+              )}
             </div>
           </div>
         </div>

@@ -144,16 +144,17 @@ const ExpensesBilling = () => {
         </div>
 
         {/* Quick Expense Entry */}
-        <div className="col-span-5 card p-5">
+        <div className="col-span-12 lg:col-span-5 card p-5 font-Outfit">
           <h2 className="text-lg font-semibold text-slate-900 mb-5">Quick Expense Entry</h2>
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleLogExpense}>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Description</label>
               <input
                 type="text"
                 placeholder="e.g. Filing Fees"
-                value={expenseForm.description}
-                onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                required
+                value={expenseForm.title}
+                onChange={(e) => setExpenseForm({ ...expenseForm, title: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               />
             </div>
@@ -163,7 +164,9 @@ const ExpensesBilling = () => {
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input
-                    type="text"
+                    type="number"
+                    step="0.01"
+                    required
                     placeholder="0.00"
                     value={expenseForm.amount}
                     onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
@@ -178,30 +181,31 @@ const ExpensesBilling = () => {
                   onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 >
-                  <option>Notarial Fees</option>
-                  <option>Filing Fees</option>
-                  <option>Court Fees</option>
-                  <option>Travel Expenses</option>
-                  <option>Office Supplies</option>
+                  <option value="Court Fee">Court Fees</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Filing">Filing</option>
+                  <option value="Miscellaneous">Miscellaneous</option>
                 </select>
               </div>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Related Case</label>
               <select
-                value={expenseForm.relatedCase}
-                onChange={(e) => setExpenseForm({ ...expenseForm, relatedCase: e.target.value })}
+                required
+                value={expenseForm.caseId}
+                onChange={(e) => setExpenseForm({ ...expenseForm, caseId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
               >
-                <option>Smith vs. Global Dynamics</option>
-                <option>TechCorp IP Dispute</option>
-                <option>Miller Criminal Case</option>
-                <option>Johnson Family Law</option>
+                <option value="" disabled>Select a case</option>
+                {cases.map(c => (
+                  <option key={c._id} value={c._id}>{c.title} ({c.caseNumber})</option>
+                ))}
               </select>
             </div>
             <button
-              type="button"
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg font-medium transition-colors text-sm"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg font-medium transition-colors text-sm disabled:opacity-50"
             >
               Log Expense
             </button>

@@ -159,6 +159,7 @@ const MatterManagement = () => {
               </tr>
             </thead>
             <tbody>
+              {matters.map((matter) => (
                 <tr key={matter._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className="py-4 px-4">
                     <p className="text-sm font-semibold text-slate-900">{matter.title}</p>
@@ -166,8 +167,10 @@ const MatterManagement = () => {
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2.5">
-                      <Avatar initials={matter.clientInitials} size="sm" />
-                      <span className="text-sm text-slate-700">{matter.client}</span>
+                      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                        {matter.client?.name ? matter.client.name.split(' ').map(n => n[0]).join('') : '??'}
+                      </div>
+                      <span className="text-sm text-slate-700">{matter.client?.name || 'Unknown'}</span>
                     </div>
                   </td>
                   <td className="py-4 px-4">
@@ -194,7 +197,8 @@ const MatterManagement = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          )}
         </div>
 
         {/* Pagination */}

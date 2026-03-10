@@ -14,6 +14,7 @@ import { adminService } from '../services/adminService';
 
 const adminTabs = [
   { id: 'users', label: 'User Management', icon: Users },
+  { id: 'health', label: 'System Health', icon: Shield },
   { id: 'roles', label: 'Roles & Permissions', icon: Shield },
   { id: 'audit', label: 'Audit Logs', icon: FileText },
   { id: 'settings', label: 'System Settings', icon: Settings },
@@ -22,6 +23,7 @@ const adminTabs = [
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
+  const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const fetchUsers = async () => {
@@ -36,6 +38,18 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchHealth = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getSystemHealth();
+      setHealth(data);
+    } catch (error) {
+      console.error('Failed to fetch health', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleToggleStatus = async (userId) => {
     try {
       await adminService.toggleUserStatus(userId);
@@ -45,10 +59,9 @@ const AdminPanel = () => {
     }
   };
 
-  React.useEffect(() => {
-    if (activeTab === 'users') {
-      fetchUsers();
-    }
+  useEffect(() => {
+    if (activeTab === 'users') fetchUsers();
+    if (activeTab === 'health') fetchHealth();
   }, [activeTab]);
 
   return (
@@ -150,6 +163,80 @@ const AdminPanel = () => {
                 </tbody>
               </table>
             </>
+          )}
+
+          {activeTab === 'health' && health && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-slate-900 mb-5">System Health & Security</h2>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-500 font-medium uppercase mb-1">CPU Usage</p>
+                  <p className="text-2xl font-bold text-slate-900">{health.hardware.cpuUsage}%</p>
+                  <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div className="bg-blue-600 h-full transition-all duration-500" style={{ width: `${health.hardware.cpuUsage}%` }}></div>
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-500 font-medium uppercase mb-1">Memory (RAM)</p>
+                  <p className="text-2xl font-bold text-slate-900">{health.hardware.memUsed}%</p>
+                  <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div className="bg-violet-600 h-full transition-all duration-500" style={{ width: `${health.hardware.memUsed}%` }}></div>
+                  </div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-center">
+                  <p className="text-xs text-slate-500 font-medium uppercase mb-1">Disk Storage</p>
+                  <p className="text-2xl font-bold text-slate-900">{health.hardware.diskUsed}%</p>
+                  <div className="w-full bg-slate-200 h-1.5 rounded-full mt-3 overflow-hidden">
+                    <div className="bg-amber-500 h-full transition-all duration-500" style={{ width: `${health.hardware.diskUsed}%` }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-5 mt-8">
+                <div className="p-5 border border-slate-100 rounded-xl bg-white shadow-sm">
+                  <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-blue-600" /> Security Status
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Rate Limiting</span>
+                      <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-bold">{health.security.rateLimitSetting}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Security Headers (Helmet)</span>
+                      <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded text-xs font-bold">Enabled</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">SSL Configuration</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${health.security.sslConfigured ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'}`}>
+                        {health.security.sslConfigured ? 'Production Ready' : 'Development'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-5 border border-slate-100 rounded-xl bg-white shadow-sm">
+                  <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600" /> Database Metrics
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Total Personnel</span>
+                      <span className="font-bold text-slate-900">{health.stats.users}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Active Cases</span>
+                      <span className="font-bold text-slate-900">{health.stats.activeCases}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-slate-500">Indexed Documents</span>
+                      <span className="font-bold text-slate-900">{health.stats.totalDocuments}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
 
           {activeTab === 'roles' && (

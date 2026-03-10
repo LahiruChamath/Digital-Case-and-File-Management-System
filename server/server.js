@@ -15,9 +15,19 @@ app.use(express.json());
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100 // limit each IP to 100 requests per windowMs
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again after 15 minutes'
 });
+
+const authLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10, // limit each IP to 10 requests per hour for auth
+  message: 'Too many login attempts, please try again after an hour'
+});
+
 app.use('/api/', limiter);
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Routes
 app.use('/api/auth', require('./routes/auth.routes.js'));
@@ -32,21 +42,27 @@ app.use('/api/invoices', require('./routes/invoice.routes.js'));
 app.use('/api/admin', require('./routes/admin.routes.js'));
 
 // Initialize Cron Jobs
-const startReminderJob = require('./utils/reminderJob.js');
-startReminderJob();
+if (process.env.NODE_ENV !== 'test') {
+  const startReminderJob = require('./utils/reminderJob.js');
+  startReminderJob();
+}
 
 // Root Route
 app.get('/', (req, res) => {
   res.send('Digital Case Management API is running...');
 });
 
-// Database Connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('MongoDB connection error:', err));
+// Only connect and listen if not in test mode
+if (process.env.NODE_ENV !== 'test') {
+  mongoose
+    .connect(process.env.MONGODB_URI)
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err) => console.error('MongoDB connection error:', err));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+module.exports = app;

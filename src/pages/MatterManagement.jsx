@@ -11,7 +11,7 @@ const mattersData = [
     client: 'Alice Smith',
     clientInitials: 'AS',
     practiceArea: 'Litigation',
-    practiceAreaColor: 'text-blue-600 bg-blue-50',
+    practiceAreaColor: 'text-blue-400 bg-blue-500/10 border border-blue-500/20',
     status: 'Active',
     priority: 'High',
   },
@@ -21,7 +21,7 @@ const mattersData = [
     client: 'Robert Miller',
     clientInitials: 'RM',
     practiceArea: 'Notarial',
-    practiceAreaColor: 'text-red-600 bg-red-50',
+    practiceAreaColor: 'text-red-400 bg-red-500/10 border border-red-500/20',
     status: 'Active',
     priority: 'Medium',
   },
@@ -31,7 +31,7 @@ const mattersData = [
     client: 'TechCorp Inc.',
     clientInitials: 'TI',
     practiceArea: 'Company Secretarial',
-    practiceAreaColor: 'text-violet-600 bg-violet-50',
+    practiceAreaColor: 'text-violet-400 bg-violet-500/10 border border-violet-500/20',
     status: 'Pending',
     priority: 'Medium',
   },
@@ -41,7 +41,7 @@ const mattersData = [
     client: 'Sarah Johnson',
     clientInitials: 'SJ',
     practiceArea: 'Oath Commissioner',
-    practiceAreaColor: 'text-emerald-600 bg-emerald-50',
+    practiceAreaColor: 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20',
     status: 'Active',
     priority: 'Low',
   },
@@ -51,7 +51,7 @@ const mattersData = [
     client: 'BuildIt Co.',
     clientInitials: 'BC',
     practiceArea: 'Litigation',
-    practiceAreaColor: 'text-blue-600 bg-blue-50',
+    practiceAreaColor: 'text-blue-400 bg-blue-500/10 border border-blue-500/20',
     status: 'Closed',
     priority: 'Low',
   },
@@ -93,8 +93,8 @@ const MatterManagement = () => {
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Matter Management</h1>
-          <p className="text-slate-500 mt-1">Track and manage Litigation, Notarial, Oath, and Secretarial matters.</p>
+          <h1 className="text-2xl font-bold text-white tracking-wide">Matter Management</h1>
+          <p className="text-slate-400 mt-1">Track and manage Litigation, Notarial, Oath, and Secretarial matters.</p>
         </div>
         <button className="btn-primary">
           <Plus className="w-4 h-4" />
@@ -104,22 +104,22 @@ const MatterManagement = () => {
 
       {/* Filters */}
       <div className="card p-5">
-        <div className="flex items-center justify-between mb-5">
-          <div className="relative w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-5">
+          <div className="relative w-full md:w-96 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
             <input
               type="text"
               placeholder="Search by matter #, title, or client..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="futuristic-input pl-11"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4 w-full md:w-auto">
             <select 
               value={filters.type}
               onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-              className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="futuristic-input w-full md:w-auto"
             >
               <option value="">All Practice Areas</option>
               <option value="Litigation">Litigation</option>
@@ -130,7 +130,7 @@ const MatterManagement = () => {
             <select 
               value={filters.status}
               onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-              className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="futuristic-input w-full md:w-auto"
             >
               <option value="">All Statuses</option>
               <option value="Active">Active</option>
@@ -144,52 +144,57 @@ const MatterManagement = () => {
         <div className="overflow-x-auto min-h-[300px]">
           {loading ? (
             <div className="flex justify-center p-20">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
             </div>
           ) : (
             <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-200">
-                <th className="table-header text-left py-3 px-4">Matter Info</th>
-                <th className="table-header text-left py-3 px-4">Client</th>
-                <th className="table-header text-left py-3 px-4">Practice Area</th>
-                <th className="table-header text-left py-3 px-4">Status</th>
-                <th className="table-header text-left py-3 px-4">Priority</th>
-                <th className="table-header text-right py-3 px-4">Actions</th>
+              <tr className="border-b border-slate-700/50">
+                <th className="table-header text-left py-4 px-5">Matter Info</th>
+                <th className="table-header text-left py-4 px-5">Client</th>
+                <th className="table-header text-left py-4 px-5">Practice Area</th>
+                <th className="table-header text-left py-4 px-5">Status</th>
+                <th className="table-header text-left py-4 px-5">Priority</th>
+                <th className="table-header text-right py-4 px-5">Actions</th>
               </tr>
             </thead>
             <tbody>
               {matters.map((matter) => (
-                <tr key={matter._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="py-4 px-4">
-                    <p className="text-sm font-semibold text-slate-900">{matter.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{matter.caseNumber}</p>
+                <tr key={matter._id} className="border-b border-slate-800/40 hover:bg-white/5 transition-colors group">
+                  <td className="py-4 px-5">
+                    <p className="text-sm font-bold text-slate-100 group-hover:text-blue-400 transition-colors">{matter.title}</p>
+                    <p className="text-xs text-slate-500 mt-1 uppercase tracking-widest font-semibold">{matter.caseNumber}</p>
                   </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
+                  <td className="py-4 px-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-slate-800 text-blue-400 border border-blue-500/20 rounded-lg flex items-center justify-center text-xs font-black tracking-wider shadow-[0_0_10px_rgba(59,130,246,0.1)]">
                         {matter.client?.name ? matter.client.name.split(' ').map(n => n[0]).join('') : '??'}
                       </div>
-                      <span className="text-sm text-slate-700">{matter.client?.name || 'Unknown'}</span>
+                      <span className="text-sm font-medium text-slate-300">{matter.client?.name || 'Unknown'}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium ${matter.practiceAreaColor}`}>
-                      {matter.practiceArea}
+                  <td className="py-4 px-5">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[11px] uppercase tracking-widest font-bold ${
+                      matter.type === 'Litigation' ? 'text-blue-400 bg-blue-500/10 border border-blue-500/20' :
+                      matter.type === 'Notarial' ? 'text-red-400 bg-red-500/10 border border-red-500/20' :
+                      matter.type === 'Company Secretarial' ? 'text-violet-400 bg-violet-500/10 border border-violet-500/20' :
+                      'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20'
+                    }`}>
+                      {matter.type}
                     </span>
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <StatusBadge status={matter.status} />
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <PriorityBadge priority={matter.priority} />
                   </td>
-                  <td className="py-4 px-4">
+                  <td className="py-4 px-5">
                     <div className="flex items-center justify-end gap-2">
-                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
+                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white border border-transparent hover:border-white/10">
                         <ExternalLink className="w-4 h-4" />
                       </button>
-                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
+                      <button className="p-2 hover:bg-white/10 rounded-lg transition-colors text-slate-500 hover:text-white border border-transparent hover:border-white/10">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </div>
@@ -202,15 +207,15 @@ const MatterManagement = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-100">
-          <p className="text-sm text-slate-500">Showing 5 of 124 matters</p>
+        <div className="flex items-center justify-between mt-5 pt-5 border-t border-slate-700/50">
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-widest">Showing {matters.length} matters</p>
           <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-              Previous
+            <button className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
+              Prev
             </button>
-            <button className="w-8 h-8 bg-blue-600 text-white rounded-lg text-sm font-medium">1</button>
-            <button className="w-8 h-8 hover:bg-slate-100 rounded-lg text-sm text-slate-600">2</button>
-            <button className="px-3 py-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+            <button className="w-8 h-8 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-lg text-sm font-bold shadow-[0_0_10px_rgba(79,70,229,0.4)] border border-indigo-400/20">1</button>
+            <button className="w-8 h-8 hover:bg-white/5 rounded-lg text-sm font-bold text-slate-400 transition-colors">2</button>
+            <button className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors">
               Next
             </button>
           </div>

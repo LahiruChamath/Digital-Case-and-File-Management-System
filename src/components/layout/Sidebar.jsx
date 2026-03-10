@@ -12,6 +12,7 @@ import {
   Bell,
   Building2
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -25,6 +26,14 @@ const navItems = [
 
 const Sidebar = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  if (!user) return null;
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-64 bg-sidebar-bg flex flex-col z-50">
@@ -62,18 +71,18 @@ const Sidebar = () => {
       <div className="px-3 py-4 border-t border-slate-800">
         <div className="flex items-center gap-3 px-3 py-2">
           <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-            JD
+            {user.name.split(' ').map(n => n[0]).join('')}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">John Doe, Esq.</p>
-            <p className="text-slate-500 text-xs truncate">Senior Partner</p>
+            <p className="text-white text-sm font-medium truncate">{user.name}</p>
+            <p className="text-slate-500 text-xs truncate">{user.role}</p>
           </div>
           <button className="text-slate-500 hover:text-slate-300 transition-colors">
             <Bell className="w-4 h-4" />
           </button>
         </div>
         <button
-          onClick={() => navigate('/login')}
+          onClick={handleLogout}
           className="sidebar-link sidebar-link-inactive w-full mt-2"
         >
           <LogOut className="w-5 h-5" />

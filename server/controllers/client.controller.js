@@ -1,0 +1,50 @@
+const Client = require('../models/Client');
+
+// @desc    Register new client
+// @route   POST /api/clients
+// @access  Private
+exports.registerClient = async (req, res) => {
+  try {
+    const client = await Client.create(req.body);
+    res.status(201).json(client);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to register client', error: error.message });
+  }
+};
+
+// @desc    Get all clients
+// @route   GET /api/clients
+// @access  Private
+exports.getClients = async (req, res) => {
+  const { search } = req.query;
+  let query = {};
+  if (search) {
+    query.$or = [
+      { name: { $regex: search, $options: 'i' } },
+      { email: { $regex: search, $options: 'i' } },
+      { identificationNumber: { $regex: search, $options: 'i' } }
+    ];
+  }
+  try {
+    const clients = await Client.find(query);
+    res.json(clients);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch clients', error: error.message });
+  }
+};
+
+// @desc    Add communication log
+// @route   POST /api/clients/:id/communication
+// @access  Private
+exports.addCommunicationLog = async (req, res) => {
+  try {
+    const client = await Client.findByIdAndUpdate(
+      req.params.id,
+      { $push: { communicationHistory: { ...req.body, loggedBy: req.user._id } } },
+      { new: true }
+    );
+    res.json(client);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to add communication log', error: error.message });
+  }
+};

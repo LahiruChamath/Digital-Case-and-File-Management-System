@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, ExternalLink, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import PriorityBadge from '../components/common/PriorityBadge';
@@ -57,8 +57,36 @@ const mattersData = [
   },
 ];
 
+import { caseService } from '../services/caseService';
+
 const MatterManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [matters, setMatters] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    status: '',
+    type: ''
+  });
+
+  const fetchMatters = async () => {
+    setLoading(true);
+    try {
+      const data = await caseService.getAll({ 
+        search: searchTerm,
+        status: filters.status,
+        type: filters.type
+      });
+      setMatters(data);
+    } catch (error) {
+      console.error('Failed to fetch matters', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatters();
+  }, [searchTerm, filters]);
 
   return (
     <div className="space-y-6">
@@ -88,25 +116,38 @@ const MatterManagement = () => {
             />
           </div>
           <div className="flex items-center gap-3">
-            <select className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Practice Areas</option>
-              <option>Litigation</option>
-              <option>Notarial</option>
-              <option>Oath Commissioner</option>
-              <option>Company Secretarial</option>
+            <select 
+              value={filters.type}
+              onChange={(e) => setFilters({ ...filters, type: e.target.value })}
+              className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Practice Areas</option>
+              <option value="Litigation">Litigation</option>
+              <option value="Notarial">Notarial</option>
+              <option value="Oath Commissioner">Oath Commissioner</option>
+              <option value="Company Secretarial">Company Secretarial</option>
             </select>
-            <select className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>All Statuses</option>
-              <option>Active</option>
-              <option>Pending</option>
-              <option>Closed</option>
+            <select 
+              value={filters.status}
+              onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+              className="text-sm border border-slate-300 rounded-lg px-3 py-2 text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">All Statuses</option>
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Closed">Closed</option>
             </select>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto min-h-[300px]">
+          {loading ? (
+            <div className="flex justify-center p-20">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <table className="w-full">
             <thead>
               <tr className="border-b border-slate-200">
                 <th className="table-header text-left py-3 px-4">Matter Info</th>
@@ -118,11 +159,10 @@ const MatterManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {mattersData.map((matter) => (
-                <tr key={matter.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <tr key={matter._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                   <td className="py-4 px-4">
                     <p className="text-sm font-semibold text-slate-900">{matter.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5">{matter.id}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{matter.caseNumber}</p>
                   </td>
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-2.5">

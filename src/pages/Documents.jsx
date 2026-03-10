@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Upload, Filter, FileText, Calendar, MoreVertical, FolderOpen, HardDrive } from 'lucide-react';
 
 const categories = [
@@ -42,9 +42,34 @@ const documentsData = [
   },
 ];
 
+import { documentService } from '../services/documentService';
+
 const Documents = () => {
   const [activeCategory, setActiveCategory] = useState('All Documents');
   const [searchTerm, setSearchTerm] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchDocuments = async (query = '') => {
+    setLoading(true);
+    try {
+      const data = await documentService.search(query);
+      setDocuments(data);
+    } catch (error) {
+      console.error('Failed to fetch documents', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDocuments(searchTerm);
+  }, [searchTerm]);
+
+  const handleUpload = () => {
+    // Open upload modal logic here
+    console.log('Upload triggered');
+  };
 
   return (
     <div className="space-y-6">
@@ -125,44 +150,50 @@ const Documents = () => {
           </div>
 
           {/* Table */}
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200">
-                <th className="table-header text-left py-3 px-4">Name</th>
-                <th className="table-header text-left py-3 px-4">Related Case</th>
-                <th className="table-header text-left py-3 px-4">Size</th>
-                <th className="table-header text-left py-3 px-4">Date Modified</th>
-                <th className="table-header text-right py-3 px-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {documentsData.map((doc) => (
-                <tr key={doc.name} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-2.5">
-                      <FileText className="w-5 h-5 text-blue-500" />
-                      <span className="text-sm font-medium text-slate-900">{doc.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4 text-sm text-slate-600">{doc.relatedCase}</td>
-                  <td className="py-3.5 px-4 text-sm text-slate-600">{doc.size}</td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center gap-1.5 text-sm text-slate-600">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                      {doc.dateModified}
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-4">
-                    <div className="flex items-center justify-end">
-                      <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
+          {loading ? (
+            <div className="flex justify-center p-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-200">
+                  <th className="table-header text-left py-3 px-4">Name</th>
+                  <th className="table-header text-left py-3 px-4">Related Case</th>
+                  <th className="table-header text-left py-3 px-4">Format</th>
+                  <th className="table-header text-left py-3 px-4">Date Modified</th>
+                  <th className="table-header text-right py-3 px-4">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {documents.map((doc) => (
+                  <tr key={doc._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="w-5 h-5 text-blue-500" />
+                        <span className="text-sm font-medium text-slate-900">{doc.title}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4 text-sm text-slate-600">{doc.case?.title || 'Unknown'}</td>
+                    <td className="py-3.5 px-4 text-sm text-slate-600 uppercase">{doc.format}</td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                        {new Date(doc.updatedAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center justify-end">
+                        <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Plus,
   FileText,
@@ -10,6 +10,9 @@ import {
   DollarSign,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
+import { expenseService } from '../services/expenseService';
+import { caseService } from '../services/caseService';
+import { invoiceService } from '../services/invoiceService';
 
 const financialCards = [
   {
@@ -49,12 +52,61 @@ const invoicesData = [
 ];
 
 const ExpensesBilling = () => {
+  const [cases, setCases] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
-    description: '',
+    title: '',
     amount: '',
-    category: 'Notarial Fees',
-    relatedCase: 'Smith vs. Global Dynamics',
+    category: 'Court Fee',
+    caseId: '',
   });
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const casesData = await caseService.getAll();
+      setCases(casesData);
+      if (casesData.length > 0) {
+        setExpenseForm(prev => ({ ...prev, caseId: casesData[0]._id }));
+      }
+    } catch (error) {
+      console.error('Failed to fetch data', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleLogExpense = async (e) => {
+    e.preventDefault();
+    try {
+      await expenseService.record({
+        ...expenseForm,
+        case: expenseForm.caseId
+      });
+      alert('Expense logged successfully!');
+      setExpenseForm({ title: '', amount: '', category: 'Court Fee', caseId: cases[0]?._id || '' });
+    } catch (error) {
+      console.error('Failed to log expense', error);
+    }
+  };
+
+  const handleDownloadInvoice = async () => {
+    if (!expenseForm.caseId) return alert('Please select a case first');
+    setDownloading(true);
+    try {
+      const selectedCase = cases.find(c => c._id === expenseForm.caseId);
+      await invoiceService.generateAndDownload(expenseForm.caseId, selectedCase?.caseNumber || 'INV');
+    } catch (error) {
+      alert('Failed to generate invoice');
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -69,9 +121,13 @@ const ExpensesBilling = () => {
             <Plus className="w-4 h-4" />
             Track Expense
           </button>
-          <button className="btn-primary">
+          <button 
+            className="btn-primary" 
+            onClick={handleDownloadInvoice}
+            disabled={downloading}
+          >
             <FileText className="w-4 h-4" />
-            Create Invoice
+            {downloading ? 'Generating...' : 'Create Invoice'}
           </button>
         </div>
       </div>

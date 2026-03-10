@@ -10,6 +10,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import Avatar from '../components/common/Avatar';
+import { adminService } from '../services/adminService';
 
 const adminTabs = [
   { id: 'users', label: 'User Management', icon: Users },
@@ -18,43 +19,37 @@ const adminTabs = [
   { id: 'settings', label: 'System Settings', icon: Settings },
 ];
 
-const usersData = [
-  {
-    initials: 'JD',
-    name: 'John Doe',
-    email: 'john.doe@firm-management.com',
-    role: 'Senior Partner',
-    status: 'Active',
-    lastLogin: '2 hours ago',
-  },
-  {
-    initials: 'JS',
-    name: 'Jane Smith',
-    email: 'jane.s@firm-management.com',
-    role: 'Associate Attorney',
-    status: 'Active',
-    lastLogin: '5 mins ago',
-  },
-  {
-    initials: 'MJ',
-    name: 'Mike Johnson',
-    email: 'mike.j@firm-management.com',
-    role: 'Paralegal',
-    status: 'Active',
-    lastLogin: 'Yesterday',
-  },
-  {
-    initials: 'SW',
-    name: 'Sarah Wilson',
-    email: 'sarah.w@firm-management.com',
-    role: 'Legal Secretary',
-    status: 'Inactive',
-    lastLogin: '1 week ago',
-  },
-];
-
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getUsers();
+      setUsers(data);
+    } catch (error) {
+      console.error('Failed to fetch users', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (userId) => {
+    try {
+      await adminService.toggleUserStatus(userId);
+      fetchUsers();
+    } catch (error) {
+      alert('Failed to update user status');
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [activeTab]);
 
   return (
     <div className="space-y-6">
@@ -108,11 +103,11 @@ const AdminPanel = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {usersData.map((user) => (
+                  {users.map((user) => (
                     <tr key={user.email} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <Avatar initials={user.initials} size="md" />
+                          <Avatar initials={user.name.split(' ').map(n=>n[0]).join('')} size="md" />
                           <div>
                             <p className="text-sm font-semibold text-slate-900">{user.name}</p>
                             <p className="text-xs text-slate-500">{user.email}</p>
@@ -122,21 +117,29 @@ const AdminPanel = () => {
                       <td className="py-4 px-4 text-sm text-slate-700">{user.role}</td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1.5">
-                          {user.status === 'Active' ? (
+                          {user.isActive ? (
                             <CheckCircle className="w-4 h-4 text-green-500" />
                           ) : (
-                            <XCircle className="w-4 h-4 text-slate-400" />
+                            <XCircle className="w-4 h-4 text-red-400" />
                           )}
                           <span className={`text-sm ${
-                            user.status === 'Active' ? 'text-green-700' : 'text-slate-500'
+                            user.isActive ? 'text-green-700' : 'text-red-500'
                           }`}>
-                            {user.status}
+                            {user.isActive ? 'Active' : 'Deactivated'}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-4 text-sm text-slate-500">{user.lastLogin}</td>
+                      <td className="py-4 px-4 text-sm text-slate-500">N/A</td>
                       <td className="py-4 px-4">
-                        <div className="flex justify-end">
+                        <div className="flex justify-end gap-2">
+                          <button 
+                            onClick={() => handleToggleStatus(user._id)}
+                            className={`text-xs px-2 py-1 rounded font-medium ${
+                              user.isActive ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'
+                            }`}
+                          >
+                            {user.isActive ? 'Deactivate' : 'Activate'}
+                          </button>
                           <button className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-400 hover:text-slate-600">
                             <MoreVertical className="w-4 h-4" />
                           </button>

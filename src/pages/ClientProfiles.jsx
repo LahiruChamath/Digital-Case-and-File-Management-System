@@ -117,14 +117,60 @@ const ClientProfiles = () => {
                     <p className="text-xs text-slate-500 uppercase font-medium">Communication Logs</p>
                     <p className="text-lg font-bold text-slate-900">{client.communicationHistory?.length || 0}</p>
                   </div>
-                  <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
-                    View
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => { setSelectedClient(client); setIsLogModalOpen(true); }}
+                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded"
+                    >
+                      Log
+                    </button>
+                    <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                      View
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Log Communication Modal */}
+      {isLogModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-bold mb-4">Log Communication for {selectedClient?.name}</h2>
+            <form onSubmit={handleLogCommunication} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <select 
+                  className="w-full border rounded-lg p-2 text-sm"
+                  value={commForm.type}
+                  onChange={e => setCommForm({...commForm, type: e.target.value})}
+                >
+                  <option>Email</option>
+                  <option>Phone call</option>
+                  <option>Meeting</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Summary</label>
+                <textarea 
+                  className="w-full border rounded-lg p-2 text-sm h-24"
+                  placeholder="What was discussed?"
+                  required
+                  value={commForm.summary}
+                  onChange={e => setCommForm({...commForm, summary: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setIsLogModalOpen(false)} className="px-4 py-2 text-sm text-slate-600">Cancel</button>
+                <button type="submit" className="btn-primary">Save Log</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

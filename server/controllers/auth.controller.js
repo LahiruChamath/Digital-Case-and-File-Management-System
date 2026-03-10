@@ -17,6 +17,9 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.comparePassword(password))) {
+      if (!user.isActive) {
+        return res.status(401).json({ message: 'Account is deactivated. Please contact admin.' });
+      }
       res.json({
         _id: user._id,
         name: user.name,

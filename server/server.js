@@ -28,6 +28,8 @@ app.use('/api/notifications', require('./routes/notification.routes.js'));
 app.use('/api/calendar', require('./routes/calendar.routes.js'));
 app.use('/api/expenses', require('./routes/expense.routes.js'));
 app.use('/api/search', require('./routes/search.routes.js'));
+app.use('/api/invoices', require('./routes/invoice.routes.js'));
+app.use('/api/admin', require('./routes/admin.routes.js'));
 
 // Initialize Cron Jobs
 const startReminderJob = require('./utils/reminderJob.js');

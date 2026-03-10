@@ -4,11 +4,17 @@ import StatusBadge from '../components/common/StatusBadge';
 import PriorityBadge from '../components/common/PriorityBadge';
 import Avatar from '../components/common/Avatar';
 import { caseService } from '../services/caseService';
+import { clientService } from '../services/clientService';
 
 const MatterManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [matters, setMatters] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newMatterForm, setNewMatterForm] = useState({
+    title: '', caseNumber: '', client: '', type: 'Litigation', court: '', priority: 'Medium'
+  });
   const [filters, setFilters] = useState({
     status: '',
     type: ''
@@ -17,16 +23,36 @@ const MatterManagement = () => {
   const fetchMatters = async () => {
     setLoading(true);
     try {
-      const data = await caseService.getAll({ 
-        search: searchTerm,
-        status: filters.status,
-        type: filters.type
-      });
-      setMatters(data);
+      const [mattersData, clientsData] = await Promise.all([
+        caseService.getAll({ 
+          search: searchTerm,
+          status: filters.status,
+          type: filters.type
+        }),
+        clientService.getAll()
+      ]);
+      setMatters(mattersData);
+      setClients(clientsData);
+      if (clientsData.length > 0 && !newMatterForm.client) {
+        setNewMatterForm(prev => ({...prev, client: clientsData[0]._id}));
+      }
     } catch (error) {
-      console.error('Failed to fetch matters', error);
+      console.error('Failed to fetch data', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const newMatter = await caseService.create(newMatterForm);
+      setMatters([newMatter, ...matters]);
+      setIsAddModalOpen(false);
+      setNewMatterForm({ title: '', caseNumber: '', client: clients[0]?._id, type: 'Litigation', court: '', priority: 'Medium' });
+      alert('Matter created successfully!');
+    } catch (error) {
+      alert('Failed to create matter. Ensure Case Number is unique.');
     }
   };
 
@@ -42,7 +68,7 @@ const MatterManagement = () => {
           <h1 className="text-3xl font-bold text-apple-text tracking-tight">Matter Management</h1>
           <p className="text-gray-500 mt-1.5 text-sm">Track and manage active litigation and notarial matters.</p>
         </div>
-        <button className="btn-primary">
+        <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
           <Plus className="w-4 h-4" />
           New Matter
         </button>
@@ -168,6 +194,73 @@ const MatterManagement = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Matter Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-lg shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Open New Matter</h2>
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Matter Title</label>
+                  <input type="text" required className="clean-input" placeholder="Smith vs Jones"
+                    value={newMatterForm.title} onChange={e => setNewMatterForm({...newMatterForm, title: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Case Number</label>
+                  <input type="text" required className="clean-input" placeholder="LIT-24-001"
+                    value={newMatterForm.caseNumber} onChange={e => setNewMatterForm({...newMatterForm, caseNumber: e.target.value})} />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Client</label>
+                <select required className="clean-input border-gray-200"
+                  value={newMatterForm.client} onChange={e => setNewMatterForm({...newMatterForm, client: e.target.value})}>
+                  <option value="" disabled>Select a client</option>
+                  {clients.map(c => (
+                    <option key={c._id} value={c._id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Practice Area</label>
+                  <select className="clean-input border-gray-200"
+                    value={newMatterForm.type} onChange={e => setNewMatterForm({...newMatterForm, type: e.target.value})}>
+                    <option value="Litigation">Litigation</option>
+                    <option value="Notarial">Notarial</option>
+                    <option value="Oath Commissioner">Oath Commissioner</option>
+                    <option value="Company Secretarial">Company Secretarial</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Priority</label>
+                  <select className="clean-input border-gray-200"
+                    value={newMatterForm.priority} onChange={e => setNewMatterForm({...newMatterForm, priority: e.target.value})}>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Court / Jurisdiction (Optional)</label>
+                <input type="text" className="clean-input" placeholder="e.g., Supreme Court"
+                  value={newMatterForm.court} onChange={e => setNewMatterForm({...newMatterForm, court: e.target.value})} />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="btn-primary">Create Matter</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

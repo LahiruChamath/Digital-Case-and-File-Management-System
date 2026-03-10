@@ -20,7 +20,7 @@ const TopBar = () => {
     <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-40 transition-all">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm">
-        <span className="text-apple-textMuted font-semibold tracking-wider text-[11px] uppercase">LexSystem</span>
+        <span className="text-apple-textMuted font-semibold tracking-wider text-[11px] uppercase">W P Law</span>
         <span className="text-gray-300">/</span>
         <span className="text-apple-text font-bold">{currentPage}</span>
       </div>

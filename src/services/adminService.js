@@ -24,5 +24,10 @@ export const adminService = {
   getBackups: async () => {
     const { data } = await api.get('/admin/backups');
     return data;
+  },
+
+  getSystemStats: async () => {
+    const { data } = await api.get('/system/stats');
+    return data;
   }
 };

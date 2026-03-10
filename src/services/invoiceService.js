@@ -18,5 +18,10 @@ export const invoiceService = {
       console.error('Invoice download failed', error);
       throw error;
     }
+  },
+
+  getAll: async () => {
+    const { data } = await api.get('/invoices');
+    return data;
   }
 };

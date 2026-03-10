@@ -1,4 +1,5 @@
 const PDFDocument = require('pdfkit');
+const Invoice = require('../models/Invoice');
 const Case = require('../models/Case');
 const Expense = require('../models/Expense');
 const Client = require('../models/Client');
@@ -14,8 +15,27 @@ exports.generateInvoice = async (req, res) => {
     const expenses = await Expense.find({ case: req.params.caseId });
     const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
+    // Save invoice to database
+    const newInvoice = await Invoice.create({
+      case: legalCase._id,
+      client: legalCase.client._id,
+      items: expenses.map(exp => ({
+        description: exp.title,
+        quantity: 1,
+        unitPrice: exp.amount,
+        amount: exp.amount,
+        expense: exp._id
+      })),
+      subtotal: total,
+      tax: 0,
+      totalAmount: total,
+      status: 'sent',
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      generatedBy: req.user._id
+    });
+
     const doc = new PDFDocument({ margin: 50 });
-    let filename = `Invoice_${legalCase.caseNumber}.pdf`;
+    let filename = `${newInvoice.invoiceNumber}.pdf`;
     
     // Set response headers
     res.setHeader('Content-disposition', 'attachment; filename="' + filename + '"');
@@ -49,7 +69,7 @@ exports.generateInvoice = async (req, res) => {
 
     // Invoice Details
     doc
-      .text(`Invoice Number: INV-${Date.now().toString().slice(-6)}`, 400, 130)
+      .text(`Invoice Number: ${newInvoice.invoiceNumber}`, 400, 130)
       .text(`Invoice Date: ${new Date().toLocaleDateString()}`, 400, 145)
       .text(`Case Number: ${legalCase.caseNumber}`, 400, 160)
       .moveDown();
@@ -92,5 +112,17 @@ exports.generateInvoice = async (req, res) => {
     doc.end();
   } catch (error) {
     res.status(500).json({ message: 'Failed to generate invoice', error: error.message });
+  }
+};
+
+// @desc    Get all invoices
+// @route   GET /api/invoices
+// @access  Private
+exports.getAllInvoices = async (req, res) => {
+  try {
+    const invoices = await Invoice.find().populate('client', 'name email').populate('case', 'title caseNumber').sort('-createdAt');
+    res.json(invoices);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch invoices', error: error.message });
   }
 };

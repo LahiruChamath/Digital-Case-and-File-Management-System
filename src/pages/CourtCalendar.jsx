@@ -1,29 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Clock, Users as UsersIcon, User } from 'lucide-react';
 import { calendarService } from '../services/calendarService';
+import { caseService } from '../services/caseService';
 
 const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const CourtCalendar = () => {
   const [currentMonth] = useState('February 2026');
   const [events, setEvents] = useState([]);
+  const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('shared');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newEventForm, setNewEventForm] = useState({
+    title: '', type: 'Court Date', case: '', start: '', location: '', description: ''
+  });
 
-  const fetchEvents = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const data = await calendarService.getAll();
-      setEvents(data);
+      const [eventsData, casesData] = await Promise.all([
+        calendarService.getAll(),
+        caseService.getAll()
+      ]);
+      setEvents(eventsData);
+      setCases(casesData);
+      if (casesData.length > 0 && !newEventForm.case) {
+        setNewEventForm(prev => ({...prev, case: casesData[0]._id}));
+      }
     } catch (error) {
-      console.error('Failed to fetch events', error);
+      console.error('Failed to fetch data', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const newEvent = await calendarService.create(newEventForm);
+      setEvents([...events, newEvent]);
+      setIsAddModalOpen(false);
+      setNewEventForm({ title: '', type: 'Court Date', case: cases[0]?._id, start: '', location: '', description: '' });
+      alert('Event successfully added to calendar!');
+    } catch (error) {
+      alert('Failed to add event. Please check the details.');
+    }
+  };
+
   useEffect(() => {
-    fetchEvents();
+    fetchData();
   }, []);
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
@@ -79,7 +105,7 @@ const CourtCalendar = () => {
               <User className="w-4 h-4" /> My Events
             </button>
           </div>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="w-4 h-4" /> Add Event
           </button>
         </div>
@@ -163,6 +189,67 @@ const CourtCalendar = () => {
           </div>
         </div>
       </div>
+
+      {/* Add Event Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-lg shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Schedule Event</h2>
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Event Title</label>
+                <input type="text" required className="clean-input" placeholder="e.g. Initial Hearing"
+                  value={newEventForm.title} onChange={e => setNewEventForm({...newEventForm, title: e.target.value})} />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Event Type</label>
+                  <select className="clean-input" value={newEventForm.type} onChange={e => setNewEventForm({...newEventForm, type: e.target.value})}>
+                    <option value="Court Date">Court Date</option>
+                    <option value="Meeting">Meeting</option>
+                    <option value="Deadline">Deadline</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Related Case</label>
+                  <select required className="clean-input" value={newEventForm.case} onChange={e => setNewEventForm({...newEventForm, case: e.target.value})}>
+                    <option value="" disabled>Select a case</option>
+                    {cases.map(c => (
+                      <option key={c._id} value={c._id}>{c.title} ({c.caseNumber})</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Date & Time</label>
+                  <input type="datetime-local" required className="clean-input" 
+                    value={newEventForm.start} onChange={e => setNewEventForm({...newEventForm, start: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Location</label>
+                  <input type="text" className="clean-input" placeholder="e.g. Room 402"
+                    value={newEventForm.location} onChange={e => setNewEventForm({...newEventForm, location: e.target.value})} />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Description (Optional)</label>
+                <textarea className="clean-input h-20 resize-none" placeholder="Additional details..."
+                  value={newEventForm.description} onChange={e => setNewEventForm({...newEventForm, description: e.target.value})} />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="btn-primary">Schedule Event</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

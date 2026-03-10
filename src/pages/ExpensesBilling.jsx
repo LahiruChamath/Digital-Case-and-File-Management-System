@@ -13,46 +13,12 @@ import StatusBadge from '../components/common/StatusBadge';
 import { expenseService } from '../services/expenseService';
 import { caseService } from '../services/caseService';
 import { invoiceService } from '../services/invoiceService';
-
-const financialCards = [
-  {
-    label: 'Total Revenue (MTD)',
-    value: '$45,280.00',
-    change: '+15.2% from last month',
-    changeType: 'positive',
-    icon: TrendingUp,
-    iconBg: 'bg-green-50 text-green-600',
-    changeColor: 'text-status-active bg-status-active/10',
-  },
-  {
-    label: 'Outstanding Invoices',
-    value: '$18,450.00',
-    change: 'Across 12 pending payments',
-    changeType: 'neutral',
-    icon: Clock,
-    iconBg: 'bg-amber-50 text-amber-600',
-    changeColor: 'text-status-pending bg-status-pending/10',
-  },
-  {
-    label: 'Firm Expenses',
-    value: '$6,840.00',
-    change: '+2.4% from last month',
-    changeType: 'negative',
-    icon: TrendingDown,
-    iconBg: 'bg-red-50 text-red-600',
-    changeColor: 'text-status-overdue bg-status-overdue/10',
-  },
-];
-
-const invoicesData = [
-  { id: 'INV-8841', date: 'Feb 12, 2024', client: 'TechCorp Inc.', amount: '$4,200.00', status: 'Paid' },
-  { id: 'INV-8840', date: 'Feb 10, 2024', client: 'Alice Smith', amount: '$1,500.00', status: 'Pending' },
-  { id: 'INV-8839', date: 'Jan 28, 2024', client: 'Robert Miller', amount: '$2,850.00', status: 'Overdue' },
-  { id: 'INV-8838', date: 'Jan 25, 2024', client: 'Sarah Johnson', amount: '$850.00', status: 'Paid' },
-];
+import { adminService } from '../services/adminService';
 
 const ExpensesBilling = () => {
   const [cases, setCases] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [sysStats, setSysStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
@@ -65,9 +31,15 @@ const ExpensesBilling = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const casesData = await caseService.getAll();
+      const [casesData, invoicesData, statsData] = await Promise.all([
+        caseService.getAll(),
+        invoiceService.getAll(),
+        adminService.getSystemStats()
+      ]);
       setCases(casesData);
-      if (casesData.length > 0) {
+      setInvoices(invoicesData);
+      setSysStats(statsData);
+      if (casesData.length > 0 && !expenseForm.caseId) {
         setExpenseForm(prev => ({ ...prev, caseId: casesData[0]._id }));
       }
     } catch (error) {
@@ -108,6 +80,33 @@ const ExpensesBilling = () => {
     }
   };
 
+  const dynamicFinancialCards = [
+    {
+      label: 'Total Revenue',
+      value: sysStats ? `$${sysStats.totalRevenue.toFixed(2)}` : '$0.00',
+      change: 'Paid Invoices',
+      icon: TrendingUp,
+      iconBg: 'bg-green-50 text-green-600',
+      changeColor: 'text-status-active bg-status-active/10',
+    },
+    {
+      label: 'Outstanding Invoices',
+      value: sysStats ? sysStats.pendingInvoicesCount : '0',
+      change: 'Sent & Draft Payments',
+      icon: Clock,
+      iconBg: 'bg-amber-50 text-amber-600',
+      changeColor: 'text-status-pending bg-status-pending/10',
+    },
+    {
+      label: 'Firm Expenses',
+      value: sysStats ? `$${sysStats.totalExpenses.toFixed(2)}` : '$0.00',
+      change: 'Logged Expenses',
+      icon: TrendingDown,
+      iconBg: 'bg-red-50 text-red-600',
+      changeColor: 'text-status-overdue bg-status-overdue/10',
+    },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Page Header */}
@@ -134,7 +133,7 @@ const ExpensesBilling = () => {
 
       {/* Financial Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {financialCards.map((card) => (
+        {dynamicFinancialCards.map((card) => (
           <div key={card.label} className="card p-6 flex flex-col justify-between">
             <div className="flex items-start justify-between mb-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-gray-500">{card.label}</p>
@@ -172,16 +171,16 @@ const ExpensesBilling = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {invoicesData.map((inv) => (
-                  <tr key={inv.id} className="hover:bg-gray-50/50 transition-colors group">
+                {invoices.map((inv) => (
+                  <tr key={inv._id} className="hover:bg-gray-50/50 transition-colors group">
                     <td className="py-4 px-6">
-                      <p className="text-sm font-bold text-apple-text tracking-wide group-hover:text-primary-600 transition-colors">{inv.id}</p>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{inv.date}</p>
+                      <p className="text-sm font-bold text-apple-text tracking-wide group-hover:text-primary-600 transition-colors">{inv.invoiceNumber}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{new Date(inv.createdAt).toLocaleDateString()}</p>
                     </td>
-                    <td className="py-4 px-6 text-sm font-semibold text-gray-600">{inv.client}</td>
-                    <td className="py-4 px-6 text-sm font-bold text-apple-text">{inv.amount}</td>
+                    <td className="py-4 px-6 text-sm font-semibold text-gray-600">{inv.client?.name || 'Unknown Client'}</td>
+                    <td className="py-4 px-6 text-sm font-bold text-apple-text">${inv.totalAmount.toFixed(2)}</td>
                     <td className="py-4 px-6">
-                      <StatusBadge status={inv.status} />
+                      <StatusBadge status={inv.status.charAt(0).toUpperCase() + inv.status.slice(1)} />
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-1">

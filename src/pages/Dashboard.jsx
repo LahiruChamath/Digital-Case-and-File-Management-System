@@ -17,13 +17,16 @@ import { caseService } from '../services/caseService';
 import { clientService } from '../services/clientService';
 import { calendarService } from '../services/calendarService';
 import { notificationService } from '../services/notificationService';
+import { adminService } from '../services/adminService';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
     activeCases: 0,
     totalClients: 0,
     pendingInvoices: 0,
-    winRate: '89%'
+    winRate: '0%',
+    billingChart: [],
+    caseDistribution: []
   });
   const [upcomingDates, setUpcomingDates] = useState([]);
   const [notifications, setNotifications] = useState([]);
@@ -32,18 +35,24 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [cases, clients, events, notifs] = await Promise.all([
+      const [cases, clients, events, notifs, sysStats] = await Promise.all([
         caseService.getAll(),
         clientService.getAll(),
         calendarService.getAll(),
-        notificationService.getAll()
+        notificationService.getAll(),
+        adminService.getSystemStats()
       ]);
+
+      const closedCases = cases.filter(c => c.status === 'Closed').length;
+      const winRatePercent = cases.length > 0 ? Math.round((closedCases / cases.length) * 100) : 0;
 
       setStats({
         activeCases: cases.filter(c => c.status === 'Active').length,
         totalClients: clients.length,
-        pendingInvoices: 12,
-        winRate: '89%'
+        pendingInvoices: sysStats.pendingInvoicesCount || 0,
+        winRate: `${winRatePercent}%`,
+        billingChart: sysStats.billingChart || [],
+        caseDistribution: sysStats.caseDistribution || []
       });
 
       setUpcomingDates(events.slice(0, 3).map(e => ({
@@ -89,15 +98,15 @@ const Dashboard = () => {
     },
     {
       label: 'Pending Invoices',
-      value: `$${stats.pendingInvoices * 1037}`,
-      change: '-2%',
-      trend: 'down',
+      value: stats.pendingInvoices.toString(),
+      change: stats.pendingInvoices > 0 ? '+1' : '0',
+      trend: stats.pendingInvoices > 0 ? 'up' : 'down',
       icon: Clock,
     },
     {
-      label: 'Won Cases',
+      label: 'Closed Cases',
       value: stats.winRate,
-      change: '+3%',
+      change: 'Win Rate',
       trend: 'up',
       icon: CheckCircle,
     },
@@ -150,13 +159,13 @@ const Dashboard = () => {
               <option>Last 90 Days</option>
             </select>
           </div>
-          <BillingChart />
+          <BillingChart data={stats.billingChart} />
         </div>
 
         {/* Case Distribution */}
         <div className="col-span-12 lg:col-span-5 card p-6">
           <h2 className="text-lg font-semibold text-apple-text mb-8">Case Distribution</h2>
-          <CaseDistributionChart />
+          <CaseDistributionChart data={stats.caseDistribution} />
         </div>
       </div>
 

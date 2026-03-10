@@ -8,8 +8,10 @@ const ClientProfiles = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState(null);
   const [commForm, setCommForm] = useState({ type: 'Email', summary: '' });
+  const [newClientForm, setNewClientForm] = useState({ name: '', email: '', phone: '', address: '', type: 'Individual' });
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -27,14 +29,27 @@ const ClientProfiles = () => {
   }, []);
 
   const handleAddClient = () => {
-    console.log('Add client clicked');
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const newClient = await clientService.register(newClientForm);
+      setClients([...clients, newClient]);
+      setIsAddModalOpen(false);
+      setNewClientForm({ name: '', email: '', phone: '', address: '', type: 'Individual' });
+      alert('Client successfully added!');
+    } catch (error) {
+      alert('Failed to add client. Please check details.');
+    }
   };
 
   const handleLogCommunication = async (e) => {
     e.preventDefault();
     if (!selectedClient) return;
     try {
-      await clientService.logCommunication(selectedClient._id, commForm);
+      await clientService.addCommunication(selectedClient._id, commForm);
       setClients(clients.map(c => 
         c._id === selectedClient._id 
           ? { ...c, communicationHistory: [...(c.communicationHistory || []), commForm] }
@@ -165,6 +180,54 @@ const ClientProfiles = () => {
               <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
                 <button type="button" onClick={() => setIsLogModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
                 <button type="submit" className="btn-primary">Save Log</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Client Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Add New Client</h2>
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Name / Entity Name</label>
+                <input 
+                  type="text" required className="clean-input" placeholder="John Doe or Acme Corp"
+                  value={newClientForm.name} onChange={e => setNewClientForm({...newClientForm, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Email</label>
+                <input 
+                  type="email" required className="clean-input" placeholder="john@example.com"
+                  value={newClientForm.email} onChange={e => setNewClientForm({...newClientForm, email: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Phone</label>
+                  <input 
+                    type="text" className="clean-input" placeholder="+1..."
+                    value={newClientForm.phone} onChange={e => setNewClientForm({...newClientForm, phone: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Type</label>
+                  <select 
+                    className="clean-input"
+                    value={newClientForm.type} onChange={e => setNewClientForm({...newClientForm, type: e.target.value})}
+                  >
+                    <option value="Individual">Individual</option>
+                    <option value="Corporate">Corporate</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="btn-primary">Create Client</button>
               </div>
             </form>
           </div>

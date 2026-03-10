@@ -7,7 +7,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: 'john.doe@firm-management.com',
+    email: '',
     password: '',
     remember: true,
   });
@@ -42,8 +42,8 @@ const LoginPage = () => {
                 <Scale className="w-7 h-7 text-white" />
               </div>
               <div className="text-center">
-                <span className="block text-2xl font-bold tracking-tight text-apple-text">LexSystem</span>
-                <span className="block text-[11px] font-bold tracking-widest uppercase text-apple-textMuted mt-1">Law Firm Management</span>
+                <span className="block text-2xl font-bold tracking-tight text-apple-text">W P Law</span>
+                <span className="block text-[11px] font-bold tracking-widest uppercase text-apple-textMuted mt-1">Digital Case and File Management System</span>
               </div>
             </div>
           </div>
@@ -65,7 +65,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="clean-input pl-12"
-                  placeholder="name@firm-management.com"
+                  placeholder="name@wplaw.com"
                 />
               </div>
             </div>
@@ -147,7 +147,7 @@ const LoginPage = () => {
         
         <div className="relative z-10 max-w-xl">
           <blockquote className="text-white text-3xl font-semibold leading-snug mb-8 tracking-tight">
-            "LexSystem defines the modern approach to legal management. The interface is remarkably intuitive and responsive."
+            "W P Law defines the modern approach to legal management. The interface is remarkably intuitive and responsive."
           </blockquote>
           <div>
             <p className="text-white font-bold tracking-wide">Eleanor Vance</p>

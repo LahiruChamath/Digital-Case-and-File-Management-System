@@ -44,8 +44,8 @@ const Sidebar = () => {
           <Scale className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="text-apple-text font-bold text-base leading-tight">LexSystem</h1>
-          <p className="text-apple-textMuted text-[10px] uppercase tracking-widest mt-0.5 font-semibold">Legal Tech</p>
+          <h1 className="text-apple-text font-bold text-base leading-tight">W P Law</h1>
+          <p className="text-apple-textMuted text-[10px] uppercase tracking-widest mt-0.5 font-semibold">Digital Case and File Management System</p>
         </div>
       </div>
 

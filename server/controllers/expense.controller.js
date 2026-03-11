@@ -23,3 +23,15 @@ exports.getCaseExpenses = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch expenses', error: error.message });
   }
 };
+
+// @desc    Get all expenses
+// @route   GET /api/expenses
+// @access  Private
+exports.getAllExpenses = async (req, res) => {
+  try {
+    const expenses = await Expense.find().populate('case', 'title caseNumber').sort('-createdAt');
+    res.json(expenses);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch all expenses', error: error.message });
+  }
+};

@@ -9,5 +9,10 @@ export const expenseService = {
   getCaseExpenses: async (caseId) => {
     const { data } = await api.get(`/expenses/case/${caseId}`);
     return data;
+  },
+
+  getAll: async () => {
+    const { data } = await api.get('/expenses');
+    return data;
   }
 };

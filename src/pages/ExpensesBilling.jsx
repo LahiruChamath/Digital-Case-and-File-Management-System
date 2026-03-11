@@ -21,6 +21,7 @@ const ExpensesBilling = () => {
   const expenseFormRef = React.useRef(null);
   const [cases, setCases] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [expenses, setExpenses] = useState([]);
   const [sysStats, setSysStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -34,13 +35,15 @@ const ExpensesBilling = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [casesData, invoicesData, statsData] = await Promise.all([
+      const [casesData, invoicesData, statsData, expensesData] = await Promise.all([
         caseService.getAll(),
         invoiceService.getAll(),
-        adminService.getSystemStats()
+        adminService.getSystemStats(),
+        expenseService.getAll()
       ]);
       setCases(casesData);
       setInvoices(invoicesData);
+      setExpenses(expensesData);
       setSysStats(statsData);
       if (casesData.length > 0 && !expenseForm.caseId) {
         setExpenseForm(prev => ({ ...prev, caseId: casesData[0]._id }));
@@ -65,6 +68,7 @@ const ExpensesBilling = () => {
       });
       showToast('Expense logged successfully!', 'success');
       setExpenseForm({ title: '', amount: '', category: 'Court Fee', caseId: cases[0]?._id || '' });
+      fetchData(); // Auto reload to update stats, invoices, expenses
     } catch (error) {
       console.error('Failed to log expense', error);
     }
@@ -76,6 +80,8 @@ const ExpensesBilling = () => {
     try {
       const selectedCase = cases.find(c => c._id === expenseForm.caseId);
       await invoiceService.generateAndDownload(expenseForm.caseId, selectedCase?.caseNumber || 'INV');
+      showToast('Invoice generated successfully!', 'success');
+      fetchData(); // Auto reload to show the newly generated invoice in the table
     } catch (error) {
       showToast('Failed to generate invoice', 'error');
     } finally {
@@ -282,6 +288,46 @@ const ExpensesBilling = () => {
               Log Expense
             </button>
           </form>
+        </div>
+      </div>
+
+      {/* Recent Expenses Table */}
+      <div className="card overflow-hidden flex flex-col min-h-[400px]">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h2 className="text-lg font-semibold text-apple-text">Recent Expenses</h2>
+          <button className="text-sm text-primary-500 hover:text-primary-600 font-semibold transition-colors">View All</button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/50">
+                <th className="table-header py-4 px-6">Description</th>
+                <th className="table-header py-4 px-6">Category</th>
+                <th className="table-header py-4 px-6">Case</th>
+                <th className="table-header py-4 px-6 text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {expenses.map((exp) => (
+                <tr key={exp._id} className="hover:bg-gray-50/50 transition-colors group">
+                  <td className="py-4 px-6">
+                    <p className="text-sm font-bold text-apple-text tracking-wide group-hover:text-primary-600 transition-colors">{exp.title}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{new Date(exp.createdAt).toLocaleDateString()}</p>
+                  </td>
+                  <td className="py-4 px-6 text-sm font-semibold text-gray-600">
+                    <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold tracking-wider uppercase">{exp.category}</span>
+                  </td>
+                  <td className="py-4 px-6 text-sm font-medium text-gray-600">{exp.case?.title || 'Unknown Case'}</td>
+                  <td className="py-4 px-6 text-sm font-bold text-apple-text text-right">${exp.amount.toFixed(2)}</td>
+                </tr>
+              ))}
+              {expenses.length === 0 && (
+                <tr>
+                  <td colSpan="4" className="py-8 text-center text-gray-400 text-sm">No expenses logged yet.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

@@ -33,12 +33,11 @@ const invoiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-invoiceSchema.pre('save', async function (next) {
+invoiceSchema.pre('validate', async function () {
   if (!this.invoiceNumber) {
     const count = await mongoose.model('Invoice').countDocuments();
     this.invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`;
   }
-  next();
 });
 
 invoiceSchema.methods.checkOverdue = function () {

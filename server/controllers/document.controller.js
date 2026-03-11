@@ -1,6 +1,6 @@
 const Document = require('../models/Document');
-const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
+const path = require('path');
 
 // @desc    Upload new document
 // @route   POST /api/documents/upload
@@ -13,29 +13,24 @@ exports.uploadDocument = async (req, res) => {
 
     const { title, caseId, clientId, tags } = req.body;
 
-    // Upload to Cloudinary (assuming it's configured)
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'lawfirm_documents',
-      resource_type: 'auto'
-    });
+    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
     const document = await Document.create({
       title,
       fileName: req.file.originalname,
-      fileUrl: result.secure_url,
-      format: req.file.mimetype.split('/')[1],
+      fileUrl: fileUrl,
+      format: req.file.mimetype.split('/')[1] || 'unknown',
       case: caseId,
       client: clientId,
       uploader: req.user._id,
       tags: tags ? tags.split(',') : []
     });
 
-    // Delete local temp file
-    fs.unlinkSync(req.file.path);
-
     res.status(201).json(document);
   } catch (error) {
-    if (req.file) fs.unlinkSync(req.file.path);
+    if (req.file) {
+      try { fs.unlinkSync(req.file.path); } catch (e) {}
+    }
     res.status(500).json({ message: 'Upload failed', error: error.message });
   }
 };
@@ -62,23 +57,20 @@ exports.updateVersion = async (req, res) => {
       updatedBy: req.user._id
     });
 
-    // Upload new version
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: 'lawfirm_documents',
-      resource_type: 'auto'
-    });
+    const newFileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
 
-    document.fileUrl = result.secure_url;
+    document.fileUrl = newFileUrl;
     document.fileName = req.file.originalname;
     document.version += 1;
     document.updatedAt = Date.now();
 
     await document.save();
-    fs.unlinkSync(req.file.path);
 
     res.json(document);
   } catch (error) {
-    if (req.file) fs.unlinkSync(req.file.path);
+    if (req.file) {
+      try { fs.unlinkSync(req.file.path); } catch (e) {}
+    }
     res.status(500).json({ message: 'Version update failed', error: error.message });
   }
 };

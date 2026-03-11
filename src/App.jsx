@@ -13,10 +13,12 @@ import AdminPanel from './pages/AdminPanel';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 
 function App() {
   return (
-    <AuthProvider>
+    <ToastProvider>
+      <AuthProvider>
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -44,6 +46,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    </ToastProvider>
   );
 }
 

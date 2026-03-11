@@ -5,6 +5,10 @@ const Client = require('../models/Client');
 // @access  Private
 exports.registerClient = async (req, res) => {
   try {
+    if (!req.body.identificationNumber) {
+      // Ensure unique constraint isn't violated by multiple empty values
+      req.body.identificationNumber = `ID-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    }
     const client = await Client.create(req.body);
     res.status(201).json(client);
   } catch (error) {

@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Mail, Phone, ExternalLink, MoreHorizontal } from 'lucide-react';
 import Avatar from '../components/common/Avatar';
 import { clientService } from '../services/clientService';
+import { useToast } from '../context/ToastContext';
 
 const ClientProfiles = () => {
+  const { showToast } = useToast();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,9 +41,9 @@ const ClientProfiles = () => {
       setClients([...clients, newClient]);
       setIsAddModalOpen(false);
       setNewClientForm({ name: '', email: '', phone: '', address: '', type: 'Individual' });
-      alert('Client successfully added!');
+      showToast('Client successfully added!', 'success');
     } catch (error) {
-      alert('Failed to add client. Please check details.');
+      showToast('Failed to add client. Please check details.', 'error');
     }
   };
 
@@ -57,9 +59,9 @@ const ClientProfiles = () => {
       ));
       setIsLogModalOpen(false);
       setCommForm({ type: 'Email', summary: '' });
-      alert('Communication logged successfully');
+      showToast('Communication logged successfully', 'success');
     } catch (error) {
-      alert('Failed to log communication');
+      showToast('Failed to log communication', 'error');
     }
   };
 

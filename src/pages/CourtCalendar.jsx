@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Clock, Users as UsersIcon, User } from 'lucide-react';
 import { calendarService } from '../services/calendarService';
 import { caseService } from '../services/caseService';
+import { useToast } from '../context/ToastContext';
 
 const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const CourtCalendar = () => {
+  const { showToast } = useToast();
   const [currentMonth] = useState('February 2026');
   const [events, setEvents] = useState([]);
   const [cases, setCases] = useState([]);
@@ -42,9 +44,9 @@ const CourtCalendar = () => {
       setEvents([...events, newEvent]);
       setIsAddModalOpen(false);
       setNewEventForm({ title: '', type: 'Court Date', case: cases[0]?._id, start: '', location: '', description: '' });
-      alert('Event successfully added to calendar!');
+      showToast('Event successfully added to calendar!', 'success');
     } catch (error) {
-      alert('Failed to add event. Please check the details.');
+      showToast('Failed to add event. Please check the details.', 'error');
     }
   };
 

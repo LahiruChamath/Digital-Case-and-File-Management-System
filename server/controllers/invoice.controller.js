@@ -11,6 +11,7 @@ exports.generateInvoice = async (req, res) => {
   try {
     const legalCase = await Case.findById(req.params.caseId).populate('client');
     if (!legalCase) return res.status(404).json({ message: 'Case not found' });
+    if (!legalCase.client) return res.status(400).json({ message: 'Cannot generate invoice: Case has no assigned client' });
 
     const expenses = await Expense.find({ case: req.params.caseId });
     const total = expenses.reduce((sum, exp) => sum + exp.amount, 0);

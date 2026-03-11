@@ -14,8 +14,11 @@ import { expenseService } from '../services/expenseService';
 import { caseService } from '../services/caseService';
 import { invoiceService } from '../services/invoiceService';
 import { adminService } from '../services/adminService';
+import { useToast } from '../context/ToastContext';
 
 const ExpensesBilling = () => {
+  const { showToast } = useToast();
+  const expenseFormRef = React.useRef(null);
   const [cases, setCases] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [sysStats, setSysStats] = useState(null);
@@ -60,7 +63,7 @@ const ExpensesBilling = () => {
         ...expenseForm,
         case: expenseForm.caseId
       });
-      alert('Expense logged successfully!');
+      showToast('Expense logged successfully!', 'success');
       setExpenseForm({ title: '', amount: '', category: 'Court Fee', caseId: cases[0]?._id || '' });
     } catch (error) {
       console.error('Failed to log expense', error);
@@ -68,15 +71,26 @@ const ExpensesBilling = () => {
   };
 
   const handleDownloadInvoice = async () => {
-    if (!expenseForm.caseId) return alert('Please select a case first');
+    if (!expenseForm.caseId) return showToast('Please select a case first', 'error');
     setDownloading(true);
     try {
       const selectedCase = cases.find(c => c._id === expenseForm.caseId);
       await invoiceService.generateAndDownload(expenseForm.caseId, selectedCase?.caseNumber || 'INV');
     } catch (error) {
-      alert('Failed to generate invoice');
+      showToast('Failed to generate invoice', 'error');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleScrollToForm = () => {
+    if (expenseFormRef.current) {
+      expenseFormRef.current.scrollIntoView({ behavior: 'smooth' });
+      // small delay to allow scroll, then focus the first input
+      setTimeout(() => {
+        const titleInput = expenseFormRef.current.querySelector('input[type="text"]');
+        if (titleInput) titleInput.focus();
+      }, 500);
     }
   };
 
@@ -116,7 +130,7 @@ const ExpensesBilling = () => {
           <p className="text-gray-500 mt-1.5 text-sm">Track firm expenses, generate invoices, and manage client payments.</p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="btn-outline">
+          <button className="btn-outline" onClick={handleScrollToForm}>
             <Plus className="w-4 h-4 text-gray-500" />
             Track Expense
           </button>
@@ -200,7 +214,7 @@ const ExpensesBilling = () => {
         </div>
 
         {/* Quick Expense Entry */}
-        <div className="col-span-1 lg:col-span-5 card">
+        <div className="col-span-1 lg:col-span-5 card" ref={expenseFormRef}>
           <div className="p-6 border-b border-gray-100 bg-gray-50/50">
              <h2 className="text-lg font-semibold text-apple-text">Quick Expense Entry</h2>
           </div>

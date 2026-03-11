@@ -5,8 +5,10 @@ import PriorityBadge from '../components/common/PriorityBadge';
 import Avatar from '../components/common/Avatar';
 import { caseService } from '../services/caseService';
 import { clientService } from '../services/clientService';
+import { useToast } from '../context/ToastContext';
 
 const MatterManagement = () => {
+  const { showToast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [matters, setMatters] = useState([]);
   const [clients, setClients] = useState([]);
@@ -50,9 +52,9 @@ const MatterManagement = () => {
       setMatters([newMatter, ...matters]);
       setIsAddModalOpen(false);
       setNewMatterForm({ title: '', caseNumber: '', client: clients[0]?._id, type: 'Litigation', court: '', priority: 'Medium' });
-      alert('Matter created successfully!');
+      showToast('Matter created successfully!', 'success');
     } catch (error) {
-      alert('Failed to create matter. Ensure Case Number is unique.');
+      showToast('Failed to create matter. Ensure Case Number is unique.', 'error');
     }
   };
 

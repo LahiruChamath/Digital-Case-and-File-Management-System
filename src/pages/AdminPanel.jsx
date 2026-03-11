@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Avatar from '../components/common/Avatar';
 import { adminService } from '../services/adminService';
+import { useToast } from '../context/ToastContext';
 
 const adminTabs = [
   { id: 'users', label: 'User Management', icon: Users },
@@ -24,11 +25,16 @@ const adminTabs = [
 ];
 
 const AdminPanel = () => {
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [health, setHealth] = useState(null);
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newUserForm, setNewUserForm] = useState({
+    name: '', email: '', password: '', role: 'Legal Staff'
+  });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -69,10 +75,10 @@ const AdminPanel = () => {
   const handleBackup = async () => {
     try {
       await adminService.triggerBackup();
-      alert('Snapshot created successfully');
+      showToast('Snapshot created successfully', 'success');
       fetchBackups();
     } catch (error) {
-      alert('Backup failed');
+      showToast('Backup failed', 'error');
     }
   };
 
@@ -81,7 +87,29 @@ const AdminPanel = () => {
       await adminService.toggleUserStatus(userId);
       fetchUsers();
     } catch (error) {
-      alert('Failed to update user status');
+      showToast('Failed to update user status', 'error');
+    }
+  };
+
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await adminService.updateUserRole(userId, newRole);
+      fetchUsers();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to update user role', 'error');
+    }
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await adminService.createUser(newUserForm);
+      setIsAddModalOpen(false);
+      setNewUserForm({ name: '', email: '', password: '', role: 'Legal Staff' });
+      fetchUsers();
+      showToast('User successfully added!', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to add user', 'error');
     }
   };
 
@@ -128,7 +156,7 @@ const AdminPanel = () => {
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
                 <h2 className="text-lg font-semibold text-apple-text">Firm Personnel</h2>
-                <button className="btn-primary">
+                <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
                   <UserPlus className="w-4 h-4" />
                   Add User
                 </button>
@@ -158,7 +186,15 @@ const AdminPanel = () => {
                           </div>
                         </td>
                         <td className="py-4 px-6">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">{user.role}</span>
+                          <select 
+                            value={user.role}
+                            onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                            className="bg-gray-100 border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary-500/20 transition-all cursor-pointer hover:bg-gray-200"
+                          >
+                            <option value="Admin">Admin</option>
+                            <option value="Attorney">Attorney</option>
+                            <option value="Legal Staff">Legal Staff</option>
+                          </select>
                         </td>
                         <td className="py-4 px-6">
                           <div className="flex items-center gap-2">
@@ -360,6 +396,43 @@ const AdminPanel = () => {
                   {activeTab === 'settings' && 'Configure system preferences.'}
                 </p>
                 <div className="inline-block px-4 py-1.5 rounded-full bg-gray-100 text-[10px] font-bold uppercase tracking-widest text-gray-500">Module Upcoming</div>
+              </div>
+            </div>
+          )}
+          {/* Add User Modal */}
+          {activeTab === 'users' && isAddModalOpen && (
+            <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="card p-8 w-full max-w-md shadow-2xl">
+                <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Add New Personnel</h2>
+                <form onSubmit={handleAddSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Full Name</label>
+                    <input type="text" required className="clean-input" placeholder="Jane Doe"
+                      value={newUserForm.name} onChange={e => setNewUserForm({...newUserForm, name: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Email Address</label>
+                    <input type="email" required className="clean-input" placeholder="jane@lawfirm.com"
+                      value={newUserForm.email} onChange={e => setNewUserForm({...newUserForm, email: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Temporary Password</label>
+                    <input type="password" required className="clean-input" placeholder="••••••••" minLength={6}
+                      value={newUserForm.password} onChange={e => setNewUserForm({...newUserForm, password: e.target.value})} />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">System Role</label>
+                    <select className="clean-input" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
+                      <option value="Admin">Admin</option>
+                      <option value="Attorney">Attorney</option>
+                      <option value="Legal Staff">Legal Staff</option>
+                    </select>
+                  </div>
+                  <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
+                    <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                    <button type="submit" className="btn-primary">Create User</button>
+                  </div>
+                </form>
               </div>
             </div>
           )}

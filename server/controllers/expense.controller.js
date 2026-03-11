@@ -5,7 +5,7 @@ const Expense = require('../models/Expense');
 // @access  Private
 exports.recordExpense = async (req, res) => {
   try {
-    const expense = await Expense.create({ ...req.body, recordedBy: req.user._id });
+    const expense = await Expense.create({ ...req.body, loggedBy: req.user._id });
     res.status(201).json(expense);
   } catch (error) {
     res.status(500).json({ message: 'Failed to record expense', error: error.message });

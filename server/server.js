@@ -3,19 +3,25 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 
 // Security Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" } 
+}));
 app.use(cors());
 app.use(express.json());
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 2000, 
   message: 'Too many requests from this IP, please try again after 15 minutes'
 });
 
@@ -40,6 +46,7 @@ app.use('/api/expenses', require('./routes/expense.routes.js'));
 app.use('/api/search', require('./routes/search.routes.js'));
 app.use('/api/invoices', require('./routes/invoice.routes.js'));
 app.use('/api/admin', require('./routes/admin.routes.js'));
+app.use('/api/system', require('./routes/system.routes.js'));
 
 // Initialize Cron Jobs
 if (process.env.NODE_ENV !== 'test') {

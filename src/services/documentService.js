@@ -21,8 +21,17 @@ export const documentService = {
     return data;
   },
 
-  search: async (query) => {
+  search: async (query = '') => {
     const { data } = await api.get(`/documents/search?query=${query}`);
+    return data;
+  },
+
+  upload: async (formData) => {
+    const { data } = await api.post('/documents/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return data;
   }
 };

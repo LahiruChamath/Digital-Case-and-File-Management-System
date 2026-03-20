@@ -1,17 +1,7 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Mon', value: 4000 },
-  { name: 'Tue', value: 3000 },
-  { name: 'Wed', value: 5000 },
-  { name: 'Thu', value: 4500 },
-  { name: 'Fri', value: 6000 },
-  { name: 'Sat', value: 3500 },
-  { name: 'Sun', value: 4200 },
-];
-
-const BillingChart = () => {
+const BillingChart = ({ data = [] }) => {
   return (
     <ResponsiveContainer width="100%" height={250}>
       <LineChart data={data}>

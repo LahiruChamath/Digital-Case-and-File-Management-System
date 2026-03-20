@@ -1,14 +1,7 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { name: 'Litigation', value: 40, color: '#3b82f6' },
-  { name: 'Notarial', value: 20, color: '#ef4444' },
-  { name: 'Oath Comm.', value: 15, color: '#22c55e' },
-  { name: 'Secretarial', value: 25, color: '#f59e0b' },
-];
-
-const CaseDistributionChart = () => {
+const CaseDistributionChart = ({ data = [] }) => {
   return (
     <div className="flex items-center gap-6">
       <div className="w-48 h-48">

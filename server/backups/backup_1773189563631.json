@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-03-11T00:39:23.631Z",
+  "users": [
+    {
+      "_id": "69b055f894014ccb62338f34",
+      "name": "System Administrator",
+      "email": "admin@lawfirm.com",
+      "password": "$2b$10$EEGq2wenpNMEYgUMnnWz4.34ynESIm91KqabaiQImL2lnfZ0uEekm",
+      "role": "Admin",
+      "isActive": true,
+      "createdAt": "2026-03-10T17:33:44.909Z",
+      "__v": 0
+    },
+    {
+      "_id": "69b0b621e7dd74d528e605af",
+      "name": "Test John",
+      "email": "john@test.com",
+      "password": "$2b$10$2HFQx8kkuBgKVNLUukUqh.uan5/r98qQqN8LxOSbbfP9COEXqxYSu",
+      "role": "Attorney",
+      "isActive": true,
+      "createdAt": "2026-03-11T00:24:01.485Z",
+      "__v": 0
+    },
+    {
+      "_id": "69b0b642e7dd74d528e605b7",
+      "name": "Jane",
+      "email": "jane@test.com",
+      "password": "$2b$10$R4prRqmgBwq44G/qGk44be70qJPiDwhAU09VgbASkoRPlvFUuby.W",
+      "role": "Legal Staff",
+      "isActive": true,
+      "createdAt": "2026-03-11T00:24:34.265Z",
+      "__v": 0
+    }
+  ],
+  "cases": [
+    {
+      "_id": "69b0b014ad688cdfdddb556c",
+      "title": "Test Matter",
+      "caseNumber": "C 1",
+      "client": "69b0afe9ad688cdfdddb5561",
+      "type": "Litigation",
+      "court": "",
+      "status": "Active",
+      "priority": "Medium",
+      "assignedTo": [],
+      "timeline": [
+        {
+          "activity": "Case created",
+          "performedBy": "69b055f894014ccb62338f34",
+          "_id": "69b0b014ad688cdfdddb556d",
+          "timestamp": "2026-03-10T23:58:12.960Z"
+        }
+      ],
+      "notes": [],
+      "createdAt": "2026-03-10T23:58:12.960Z",
+      "updatedAt": "2026-03-10T23:58:12.960Z",
+      "__v": 0
+    },
+    {
+      "_id": "69b0b6ade7dd74d528e605fd",
+      "title": "Test John Matter",
+      "caseNumber": "C 2",
+      "client": "69b0afe9ad688cdfdddb5561",
+      "type": "Oath Commissioner",
+      "court": "Supreme Court",
+      "status": "Active",
+      "priority": "High",
+      "assignedTo": [],
+      "timeline": [
+        {
+          "activity": "Case created",
+          "performedBy": "69b055f894014ccb62338f34",
+          "_id": "69b0b6ade7dd74d528e605fe",
+          "timestamp": "2026-03-11T00:26:21.883Z"
+        }
+      ],
+      "notes": [],
+      "createdAt": "2026-03-11T00:26:21.884Z",
+      "updatedAt": "2026-03-11T00:26:21.884Z",
+      "__v": 0
+    }
+  ],
+  "version": "1.0.0"
+}

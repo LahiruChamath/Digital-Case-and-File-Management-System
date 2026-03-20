@@ -1,120 +1,240 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Mail, Phone, ExternalLink, MoreHorizontal } from 'lucide-react';
 import Avatar from '../components/common/Avatar';
-
-const clientsData = [
-  {
-    initials: 'AS',
-    name: 'Alice Smith',
-    type: 'Individual Client',
-    email: 'alice.smith@example.com',
-    phone: '(555) 123-4567',
-    activeCases: 2,
-    progress: 70,
-  },
-  {
-    initials: 'RM',
-    name: 'Robert Miller',
-    type: 'Individual Client',
-    email: 'r.miller@law.net',
-    phone: '(555) 987-6543',
-    activeCases: 1,
-    progress: 40,
-  },
-  {
-    initials: 'TI',
-    name: 'TechCorp Inc.',
-    type: 'Corporate Client',
-    email: 'legal@techcorp.com',
-    phone: '(555) 555-0199',
-    activeCases: 4,
-    progress: 85,
-  },
-  {
-    initials: 'SJ',
-    name: 'Sarah Johnson',
-    type: 'Individual Client',
-    email: 'sarah.j@gmail.com',
-    phone: '(555) 444-3322',
-    activeCases: 1,
-    progress: 30,
-  },
-  {
-    initials: 'BC',
-    name: 'BuildIt Co.',
-    type: 'Corporate Client',
-    email: 'admin@buildit.io',
-    phone: '(555) 111-2233',
-    activeCases: 1,
-    progress: 45,
-  },
-];
+import { clientService } from '../services/clientService';
+import { useToast } from '../context/ToastContext';
 
 const ClientProfiles = () => {
+  const { showToast } = useToast();
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [commForm, setCommForm] = useState({ type: 'Email', summary: '' });
+  const [newClientForm, setNewClientForm] = useState({ name: '', email: '', phone: '', address: '', type: 'Individual' });
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      setLoading(true);
+      try {
+        const data = await clientService.getAll();
+        setClients(data);
+      } catch (error) {
+        console.error('Failed to fetch clients');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchClients();
+  }, []);
+
+  const handleAddClient = () => {
+    setIsAddModalOpen(true);
+  };
+
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const newClient = await clientService.register(newClientForm);
+      setClients([...clients, newClient]);
+      setIsAddModalOpen(false);
+      setNewClientForm({ name: '', email: '', phone: '', address: '', type: 'Individual' });
+      showToast('Client successfully added!', 'success');
+    } catch (error) {
+      showToast('Failed to add client. Please check details.', 'error');
+    }
+  };
+
+  const handleLogCommunication = async (e) => {
+    e.preventDefault();
+    if (!selectedClient) return;
+    try {
+      await clientService.addCommunication(selectedClient._id, commForm);
+      setClients(clients.map(c => 
+        c._id === selectedClient._id 
+          ? { ...c, communicationHistory: [...(c.communicationHistory || []), commForm] }
+          : c
+      ));
+      setIsLogModalOpen(false);
+      setCommForm({ type: 'Email', summary: '' });
+      showToast('Communication logged successfully', 'success');
+    } catch (error) {
+      showToast('Failed to log communication', 'error');
+    }
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Client Profiles</h1>
-          <p className="text-slate-500 mt-1">Manage directory of individuals and corporate entities.</p>
+          <h1 className="text-3xl font-bold text-apple-text tracking-tight">Client Profiles</h1>
+          <p className="text-gray-500 mt-1.5 text-sm">Manage your directory of individuals and corporate entities.</p>
         </div>
-        <button className="btn-primary">
+        <button className="btn-primary" onClick={handleAddClient}>
           <Plus className="w-4 h-4" />
-          Add New Client
+          Add Client
         </button>
       </div>
 
+      {/* Search */}
+      <div className="card p-6">
+        <div className="relative max-w-xl group">
+          <input
+            type="text"
+            placeholder="Search clients..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="clean-input"
+          />
+        </div>
+      </div>
+
       {/* Client Cards Grid */}
-      <div className="grid grid-cols-3 gap-5">
-        {clientsData.map((client) => (
-          <div key={client.name} className="card p-5 hover:shadow-md transition-shadow">
-            {/* Card Header */}
-            <div className="flex items-start justify-between mb-4">
-              <Avatar initials={client.initials} size="lg" />
-              <button className="p-1 hover:bg-slate-100 rounded-lg transition-colors text-slate-400">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Client Info */}
-            <h3 className="text-base font-semibold text-slate-900">{client.name}</h3>
-            <p className="text-sm text-slate-500 mt-0.5">{client.type}</p>
-
-            <div className="mt-4 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Mail className="w-4 h-4 text-slate-400" />
-                <span>{client.email}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Phone className="w-4 h-4 text-slate-400" />
-                <span>{client.phone}</span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="mt-5 pt-4 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-xs text-slate-500 uppercase font-medium">Active Cases</p>
-                  <p className="text-lg font-bold text-slate-900">{client.activeCases}</p>
-                </div>
-                <button className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium">
-                  View Profile
-                  <ExternalLink className="w-3.5 h-3.5" />
+      {loading ? (
+        <div className="flex justify-center p-20">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {clients.map((client) => (
+            <div key={client._id} className="card p-6 flex flex-col group hover:-translate-y-1 transition-transform duration-300">
+              {/* Card Header */}
+              <div className="flex items-start justify-between mb-5">
+                <Avatar initials={client.name?.split(' ').map(n => n[0]).join('') || '??'} size="lg" />
+                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600">
+                  <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
-              {/* Progress Bar */}
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                  style={{ width: `${client.progress}%` }}
-                ></div>
+
+              {/* Client Info */}
+              <h3 className="text-lg font-bold text-apple-text group-hover:text-primary-600 transition-colors">{client.name}</h3>
+              <p className="text-[11px] font-semibold text-gray-500 mt-1 uppercase tracking-wider">{client.type}</p>
+
+              <div className="mt-6 flex-1 space-y-3">
+                <div className="flex items-center gap-3 text-sm text-gray-600 p-2.5 bg-gray-50 rounded-xl">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <span className="truncate font-medium">{client.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-gray-600 p-2.5 bg-gray-50 rounded-xl">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <span className="font-medium">{client.phone || 'No phone'}</span>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="mt-6 pt-5 border-t border-gray-100 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider font-bold">Logs</p>
+                  <p className="text-xl font-bold text-apple-text">{client.communicationHistory?.length || 0}</p>
+                </div>
+                <div className="flex gap-2.5">
+                  <button 
+                    onClick={() => { setSelectedClient(client); setIsLogModalOpen(true); }}
+                    className="text-[11px] font-bold uppercase tracking-wider bg-primary-50 text-primary-600 hover:bg-primary-500 hover:text-white px-4 py-2 rounded-lg transition-colors"
+                  >
+                    Log
+                  </button>
+                  <button className="flex items-center justify-center p-2 text-gray-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+      )}
+
+      {/* Log Communication Modal */}
+      {isLogModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">
+              Log Communication<br/>
+              <span className="text-gray-500 text-sm font-medium mt-1 inline-block">{selectedClient?.name}</span>
+            </h2>
+            <form onSubmit={handleLogCommunication} className="space-y-5">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Type</label>
+                <select 
+                  className="clean-input"
+                  value={commForm.type}
+                  onChange={e => setCommForm({...commForm, type: e.target.value})}
+                >
+                  <option>Email</option>
+                  <option>Phone call</option>
+                  <option>Meeting</option>
+                  <option>Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Summary</label>
+                <textarea 
+                  className="clean-input h-32 resize-none"
+                  placeholder="What was discussed?"
+                  required
+                  value={commForm.summary}
+                  onChange={e => setCommForm({...commForm, summary: e.target.value})}
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsLogModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="btn-primary">Save Log</button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* Add Client Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-md shadow-2xl">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Add New Client</h2>
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Name / Entity Name</label>
+                <input 
+                  type="text" required className="clean-input" placeholder="John Doe or Acme Corp"
+                  value={newClientForm.name} onChange={e => setNewClientForm({...newClientForm, name: e.target.value})}
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Email</label>
+                <input 
+                  type="email" required className="clean-input" placeholder="john@example.com"
+                  value={newClientForm.email} onChange={e => setNewClientForm({...newClientForm, email: e.target.value})}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Phone</label>
+                  <input 
+                    type="text" className="clean-input" placeholder="+1..."
+                    value={newClientForm.phone} onChange={e => setNewClientForm({...newClientForm, phone: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Type</label>
+                  <select 
+                    className="clean-input"
+                    value={newClientForm.type} onChange={e => setNewClientForm({...newClientForm, type: e.target.value})}
+                  >
+                    <option value="Individual">Individual</option>
+                    <option value="Corporate">Corporate</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>
+                <button type="submit" className="btn-primary">Create Client</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,16 +1,16 @@
 import React from 'react';
 
 const priorityStyles = {
-  High: 'bg-red-100 text-red-700',
-  Medium: 'bg-amber-100 text-amber-700',
-  Low: 'bg-blue-100 text-blue-700',
+  High: 'bg-status-overdue/10 text-status-overdue',
+  Medium: 'bg-status-pending/10 text-status-pending',
+  Low: 'bg-blue-500/10 text-blue-600',
 };
 
 const PriorityBadge = ({ priority }) => {
-  const style = priorityStyles[priority] || 'bg-slate-100 text-slate-600';
+  const style = priorityStyles[priority] || 'bg-gray-100 text-gray-600';
   
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${style}`}>
+    <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${style}`}>
       {priority}
     </span>
   );

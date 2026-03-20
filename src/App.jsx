@@ -10,23 +10,43 @@ import Documents from './pages/Documents';
 import ExpensesBilling from './pages/ExpensesBilling';
 import AdminPanel from './pages/AdminPanel';
 
+import ProtectedRoute from './components/common/ProtectedRoute';
+
+import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="matters" element={<MatterManagement />} />
-          <Route path="clients" element={<ClientProfiles />} />
-          <Route path="calendar" element={<CourtCalendar />} />
-          <Route path="documents" element={<Documents />} />
-          <Route path="expenses" element={<ExpensesBilling />} />
-          <Route path="admin" element={<AdminPanel />} />
-        </Route>
-      </Routes>
-    </Router>
+    <ToastProvider>
+      <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="matters" element={<MatterManagement />} />
+              <Route path="clients" element={<ClientProfiles />} />
+              <Route path="calendar" element={<CourtCalendar />} />
+              <Route path="documents" element={<Documents />} />
+              <Route path="expenses" element={<ExpensesBilling />} />
+              
+              {/* Admin Only Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['Admin']} />}>
+                <Route path="admin" element={<AdminPanel />} />
+              </Route>
+            </Route>
+          </Route>
+
+          {/* Catch all - Redirect to dashboard */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
+    </ToastProvider>
   );
 }
 

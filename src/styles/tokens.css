@@ -1,0 +1,48 @@
+/* Cards */
+.card {
+  @apply bg-white rounded-2xl border border-gray-100 shadow-apple text-apple-text overflow-hidden transition-shadow duration-300;
+}
+
+.card:hover {
+  @apply shadow-apple-hover;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary-500 text-white text-sm font-semibold rounded-full shadow-apple-sm transition-all duration-300;
+}
+
+.btn-primary:hover:not(:disabled) {
+  @apply bg-primary-600 shadow-apple -translate-y-[1px];
+}
+
+.btn-primary:active:not(:disabled) {
+  @apply bg-primary-700 shadow-apple-sm translate-y-0 transform scale-[0.98];
+}
+
+.btn-primary:disabled {
+  @apply opacity-50 cursor-not-allowed bg-orange-300 shadow-none;
+}
+
+.btn-outline {
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-apple-text text-sm font-semibold rounded-full shadow-sm transition-all duration-300 hover:bg-gray-50 hover:border-gray-300 active:bg-gray-100;
+}
+
+/* Inputs */
+.clean-input {
+  @apply w-full bg-gray-50 border border-gray-200 text-apple-text text-sm rounded-xl px-4 py-3 outline-none transition-all duration-300 placeholder-apple-textMuted;
+}
+
+.clean-input:focus {
+  @apply bg-white border-primary-500 ring-4 ring-primary-500/10 shadow-sm;
+}
+
+/* Badges */
+.badge {
+  @apply inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-gray-100 text-gray-600;
+}
+
+/* Tables */
+.table-header {
+  @apply text-xs font-semibold uppercase tracking-wider text-apple-textMuted bg-gray-50/50;
+}

@@ -92,7 +92,7 @@ exports.generateInvoice = async (req, res) => {
         .font('Helvetica')
         .text(expense.title, 60, y)
         .text(expense.category, 300, y)
-        .text(`$${expense.amount.toFixed(2)}`, 480, y, { align: 'right' });
+        .text(`LKR ${expense.amount.toLocaleString()}`, 480, y, { align: 'right' });
       y += 20;
     });
 
@@ -102,7 +102,7 @@ exports.generateInvoice = async (req, res) => {
       .fontSize(12)
       .font('Helvetica-Bold')
       .text('TOTAL DUE:', 400, y + 25)
-      .text(`$${total.toFixed(2)}`, 480, y + 25, { align: 'right' });
+      .text(`LKR ${total.toLocaleString()}`, 480, y + 25, { align: 'right' });
 
     // Footer
     doc

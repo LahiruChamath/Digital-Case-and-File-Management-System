@@ -25,4 +25,10 @@ router.get('/system/health', getSystemHealth);
 router.post('/backup', triggerBackup);
 router.get('/backups', getBackups);
 
+// Access Request Management
+const { getAccessRequests, approveAccessRequest, rejectAccessRequest } = require('../controllers/admin.controller');
+router.get('/requests', getAccessRequests);
+router.put('/requests/:id/approve', approveAccessRequest);
+router.put('/requests/:id/reject', rejectAccessRequest);
+
 module.exports = router;

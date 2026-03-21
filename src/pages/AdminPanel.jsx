@@ -17,9 +17,9 @@ import { useToast } from '../context/ToastContext';
 
 const adminTabs = [
   { id: 'users', label: 'User Management', icon: Users },
+  { id: 'requests', label: 'Access Requests', icon: UserPlus },
   { id: 'health', label: 'System Health', icon: Activity },
   { id: 'backups', label: 'Backup & Restore', icon: Database },
-  { id: 'roles', label: 'Roles & Permissions', icon: Shield },
   { id: 'audit', label: 'Audit Logs', icon: FileText },
   { id: 'settings', label: 'System Settings', icon: Settings },
 ];
@@ -28,6 +28,7 @@ const AdminPanel = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [health, setHealth] = useState(null);
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,19 @@ const AdminPanel = () => {
       setBackups(data);
     } catch (error) {
       console.error('Failed to fetch backups', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getAccessRequests();
+      setRequests(data);
+    } catch (error) {
+      console.error('Failed to fetch requests', error);
+      showToast('Failed to load access requests', 'error');
     } finally {
       setLoading(false);
     }
@@ -113,8 +127,29 @@ const AdminPanel = () => {
     }
   };
 
+  const handleApproveRequest = async (requestId) => {
+    try {
+      const res = await adminService.approveAccessRequest(requestId);
+      showToast(`Request approved! Temp Password: ${res.tempPassword}`, 'success', 10000);
+      fetchRequests();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to approve request', 'error');
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await adminService.rejectAccessRequest(requestId);
+      showToast('Request rejected', 'info');
+      fetchRequests();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to reject request', 'error');
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
+    if (activeTab === 'requests') fetchRequests();
     if (activeTab === 'health') fetchHealth();
     if (activeTab === 'backups') fetchBackups();
   }, [activeTab]);
@@ -231,6 +266,97 @@ const AdminPanel = () => {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'requests' && (
+            <div className="flex flex-col h-full animate-in fade-in duration-500">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
+                <div>
+                  <h2 className="text-lg font-semibold text-apple-text">Access Requests</h2>
+                  <p className="text-xs text-gray-500 mt-1">Review and approve new personnel onboarding requests.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    {requests.filter(r => r.status === 'pending').length} Pending
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto overflow-y-auto flex-1 bg-white">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10">
+                      <th className="table-header py-4 px-6">Requester</th>
+                      <th className="table-header py-4 px-6">Requested Role</th>
+                      <th className="table-header py-4 px-6">Purpose/Reason</th>
+                      <th className="table-header py-4 px-6">Status</th>
+                      <th className="table-header py-4 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {requests.map((request) => (
+                      <tr key={request._id} className="hover:bg-gray-50/30 transition-colors group">
+                        <td className="py-4 px-6">
+                          <div>
+                            <p className="text-sm font-semibold text-apple-text tracking-wide">{request.fullName}</p>
+                            <p className="text-[11px] font-medium text-gray-400 mt-0.5">{request.email}</p>
+                            <p className="text-[10px] text-gray-400 mt-1 font-medium">{new Date(request.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+                            {request.role}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <p className="text-xs text-gray-500 max-w-xs line-clamp-2 italic">"{request.reason}"</p>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            request.status === 'pending' ? 'bg-status-pending/10 text-status-pending' :
+                            request.status === 'approved' ? 'bg-status-active/10 text-status-active' :
+                            'bg-status-overdue/10 text-status-overdue'
+                          }`}>
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          {request.status === 'pending' ? (
+                            <div className="flex justify-end items-center gap-2">
+                              <button 
+                                onClick={() => handleApproveRequest(request._id)}
+                                className="p-2 text-status-active hover:bg-status-active/10 rounded-lg transition-colors flex items-center gap-1.5"
+                                title="Approve & Create User"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Approve</span>
+                              </button>
+                              <button 
+                                onClick={() => handleRejectRequest(request._id)}
+                                className="p-2 text-status-overdue hover:bg-status-overdue/10 rounded-lg transition-colors flex items-center gap-1.5"
+                                title="Reject Request"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Reject</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end text-[10px] font-bold text-gray-400 uppercase tracking-widest italic pr-4">
+                              Processed
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {requests.length === 0 && !loading && (
+                      <tr>
+                        <td colSpan="5" className="py-16 text-center text-sm font-medium text-gray-400 italic">No access requests found.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

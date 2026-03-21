@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const AccessRequest = require('../models/AccessRequest');
 
 // @desc    Get all users (Admin only)
 // @route   GET /api/admin/users
@@ -80,6 +81,73 @@ exports.updateUserRole = async (req, res) => {
     res.json({ message: `Role updated to ${role}`, user });
   } catch (error) {
     res.status(500).json({ message: 'Failed to update role', error: error.message });
+  }
+};
+
+// @desc    Get all access requests
+// @route   GET /api/admin/requests
+// @access  Private/Admin
+exports.getAccessRequests = async (req, res) => {
+  try {
+    const requests = await AccessRequest.find({}).sort('-createdAt');
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch requests', error: error.message });
+  }
+};
+
+// @desc    Approve access request
+// @route   PUT /api/admin/requests/:id/approve
+// @access  Private/Admin
+exports.approveAccessRequest = async (req, res) => {
+  try {
+    const request = await AccessRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    if (request.status !== 'pending') return res.status(400).json({ message: 'Request already processed' });
+
+    // 1. Create User
+    const tempPassword = Math.random().toString(36).slice(-8); // Random temporary password
+    const user = await User.create({
+      name: request.fullName,
+      email: request.email,
+      password: tempPassword,
+      role: request.role,
+      isActive: true
+    });
+
+    // 2. Update Request Status
+    request.status = 'approved';
+    request.processedBy = req.user._id;
+    request.processedAt = Date.now();
+    await request.save();
+
+    res.json({ 
+      message: 'Request approved and user created', 
+      user: { _id: user._id, name: user.name, email: user.email, role: user.role },
+      tempPassword // In a real app, send this via email
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Approval failed', error: error.message });
+  }
+};
+
+// @desc    Reject access request
+// @route   PUT /api/admin/requests/:id/reject
+// @access  Private/Admin
+exports.rejectAccessRequest = async (req, res) => {
+  try {
+    const request = await AccessRequest.findById(req.params.id);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    if (request.status !== 'pending') return res.status(400).json({ message: 'Request already processed' });
+
+    request.status = 'rejected';
+    request.processedBy = req.user._id;
+    request.processedAt = Date.now();
+    await request.save();
+
+    res.json({ message: 'Request rejected', request });
+  } catch (error) {
+    res.status(500).json({ message: 'Rejection failed', error: error.message });
   }
 };
 

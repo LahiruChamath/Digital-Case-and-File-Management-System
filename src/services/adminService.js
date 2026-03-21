@@ -39,5 +39,20 @@ export const adminService = {
   getSystemStats: async () => {
     const { data } = await api.get('/system/stats');
     return data;
+  },
+  
+  getAccessRequests: async () => {
+    const { data } = await api.get('/admin/requests');
+    return data;
+  },
+
+  approveAccessRequest: async (requestId) => {
+    const { data } = await api.put(`/admin/requests/${requestId}/approve`);
+    return data;
+  },
+
+  rejectAccessRequest: async (requestId) => {
+    const { data } = await api.put(`/admin/requests/${requestId}/reject`);
+    return data;
   }
 };

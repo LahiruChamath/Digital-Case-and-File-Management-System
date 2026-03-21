@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const AccessRequest = require('../models/AccessRequest');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id, role) => {
@@ -68,5 +69,30 @@ exports.register = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Request system access
+// @route   POST /api/auth/request-access
+// @access  Public
+exports.requestAccess = async (req, res) => {
+  const { fullName, email, role, reason } = req.body;
+
+  try {
+    const existingRequest = await AccessRequest.findOne({ email, status: 'pending' });
+    if (existingRequest) {
+      return res.status(400).json({ message: 'A pending request already exists for this email.' });
+    }
+
+    const request = await AccessRequest.create({
+      fullName,
+      email,
+      role,
+      reason
+    });
+
+    res.status(201).json({ message: 'Request submitted successfully', request });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to submit request', error: error.message });
   }
 };

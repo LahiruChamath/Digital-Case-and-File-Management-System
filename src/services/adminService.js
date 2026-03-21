@@ -21,6 +21,11 @@ export const adminService = {
     return data;
   },
 
+  deleteUser: async (userId) => {
+    const { data } = await api.delete(`/admin/users/${userId}`);
+    return data;
+  },
+
   getSystemHealth: async () => {
     const { data } = await api.get('/admin/system/health');
     return data;
@@ -38,6 +43,21 @@ export const adminService = {
 
   getSystemStats: async () => {
     const { data } = await api.get('/system/stats');
+    return data;
+  },
+  
+  getAccessRequests: async () => {
+    const { data } = await api.get('/admin/requests');
+    return data;
+  },
+
+  approveAccessRequest: async (requestId) => {
+    const { data } = await api.put(`/admin/requests/${requestId}/approve`);
+    return data;
+  },
+
+  rejectAccessRequest: async (requestId) => {
+    const { data } = await api.put(`/admin/requests/${requestId}/reject`);
     return data;
   }
 };

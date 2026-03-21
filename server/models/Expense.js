@@ -38,6 +38,10 @@ const expenseSchema = new mongoose.Schema({
   }
 });
 
+// Index for case-based expense lookups
+expenseSchema.index({ case: 1 });
+expenseSchema.index({ status: 1 });
+
 const Expense = mongoose.model('Expense', expenseSchema);
 
 module.exports = Expense;

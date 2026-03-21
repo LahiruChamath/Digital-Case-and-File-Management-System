@@ -12,7 +12,8 @@ exports.createCase = async (req, res) => {
         performedBy: req.user._id
       }]
     });
-    res.status(201).json(newCase);
+    const populated = await newCase.populate('client', 'name');
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: 'Failed to create case', error: error.message });
   }
@@ -77,5 +78,45 @@ exports.addCaseNote = async (req, res) => {
     res.json(updatedCase);
   } catch (error) {
     res.status(500).json({ message: 'Failed to add note', error: error.message });
+  }
+};
+
+// @desc    Update case
+// @route   PUT /api/cases/:id
+// @access  Private
+exports.updateCase = async (req, res) => {
+  try {
+    const updatedCase = await Case.findByIdAndUpdate(
+      req.params.id,
+      { 
+        ...req.body,
+        $push: { timeline: { activity: 'Case details updated', performedBy: req.user._id } }
+      },
+      { new: true, runValidators: true }
+    ).populate('client', 'name');
+    if (!updatedCase) return res.status(404).json({ message: 'Case not found' });
+    res.json(updatedCase);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update case', error: error.message });
+  }
+};
+
+// @desc    Close case
+// @route   PUT /api/cases/:id/close
+// @access  Private
+exports.closeCase = async (req, res) => {
+  try {
+    const closedCase = await Case.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'Closed',
+        $push: { timeline: { activity: 'Case marked as Closed', performedBy: req.user._id } }
+      },
+      { new: true }
+    ).populate('client', 'name');
+    if (!closedCase) return res.status(404).json({ message: 'Case not found' });
+    res.json(closedCase);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to close case', error: error.message });
   }
 };

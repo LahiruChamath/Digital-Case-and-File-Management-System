@@ -6,7 +6,7 @@ import { notificationService } from '../../services/notificationService';
 
 const breadcrumbMap = {
   '/dashboard': 'Dashboard Overview',
-  '/matters': 'Matter Management',
+  '/cases': 'Case Management',
   '/clients': 'Client Profiles',
   '/calendar': 'Court Calendar',
   '/documents': 'Document Repository',

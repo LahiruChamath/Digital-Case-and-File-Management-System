@@ -1,47 +1,60 @@
 const Backup = require('../models/Backup');
 const User = require('../models/User');
 const Case = require('../models/Case');
-const fs = require('fs');
-const path = require('path');
+const Client = require('../models/Client');
+const Invoice = require('../models/Invoice');
+const Expense = require('../models/Expense');
+const Event = require('../models/Event');
+const Document = require('../models/Document');
+const AccessRequest = require('../models/AccessRequest');
 
-// @desc    Trigger system backup
+// @desc    Trigger system backup (Store in Atlas)
 // @route   POST /api/admin/backup
 // @access  Private/Admin
 exports.triggerBackup = async (req, res) => {
   try {
-    // For this demonstration, we'll create a JSON snapshot of key collections
-    const [users, cases] = await Promise.all([
+    const [users, cases, clients, invoices, expenses, events, docs, requests] = await Promise.all([
       User.find({}),
-      Case.find({})
+      Case.find({}),
+      Client.find({}),
+      Invoice.find({}),
+      Expense.find({}),
+      Event.find({}),
+      Document.find({}),
+      AccessRequest.find({})
     ]);
 
     const backupData = {
       timestamp: new Date(),
       users,
       cases,
-      version: '1.0.0'
+      clients,
+      invoices,
+      expenses,
+      events,
+      documents: docs,
+      accessRequests: requests,
+      version: '2.0.0'
     };
 
-    const filename = `backup_${Date.now()}.json`;
-    const backupDir = path.join(__dirname, '../backups');
-    
-    if (!fs.existsSync(backupDir)) {
-      fs.mkdirSync(backupDir);
-    }
-
-    const filePath = path.join(backupDir, filename);
-    fs.writeFileSync(filePath, JSON.stringify(backupData, null, 2));
-
-    const stats = fs.statSync(filePath);
+    const name = `Full_System_Backup_${new Date().toISOString().split('T')[0]}_${Date.now()}`;
+    const size = Buffer.byteLength(JSON.stringify(backupData));
 
     const backupRecord = await Backup.create({
-      filename,
-      size: stats.size,
+      name,
+      data: backupData,
+      size,
       triggeredBy: req.user._id,
       status: 'Success'
     });
 
-    res.status(201).json(backupRecord);
+    res.status(201).json({
+      _id: backupRecord._id,
+      name: backupRecord.name,
+      size: backupRecord.size,
+      createdAt: backupRecord.createdAt,
+      status: backupRecord.status
+    });
   } catch (error) {
     res.status(500).json({ message: 'Backup failed', error: error.message });
   }
@@ -52,7 +65,8 @@ exports.triggerBackup = async (req, res) => {
 // @access  Private/Admin
 exports.getBackups = async (req, res) => {
   try {
-    const backups = await Backup.find().populate('triggeredBy', 'name').sort({ createdAt: -1 });
+    // Exclude the large 'data' field from the list for performance
+    const backups = await Backup.find().select('-data').populate('triggeredBy', 'name').sort({ createdAt: -1 });
     res.json(backups);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch backup history', error: error.message });

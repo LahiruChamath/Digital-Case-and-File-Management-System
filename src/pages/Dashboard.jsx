@@ -24,6 +24,7 @@ const Dashboard = () => {
     activeCases: 0,
     totalClients: 0,
     pendingInvoices: 0,
+    closedCases: 0,
     winRate: '0%',
     billingChart: [],
     caseDistribution: []
@@ -43,13 +44,14 @@ const Dashboard = () => {
         adminService.getSystemStats()
       ]);
 
-      const closedCases = cases.filter(c => c.status === 'Closed').length;
+      const closedCases = sysStats.closedCasesCount || 0;
       const winRatePercent = cases.length > 0 ? Math.round((closedCases / cases.length) * 100) : 0;
 
       setStats({
-        activeCases: cases.filter(c => c.status === 'Active').length,
+        activeCases: cases.filter(c => c.status !== 'Closed').length,
         totalClients: clients.length,
         pendingInvoices: sysStats.pendingInvoicesCount || 0,
+        closedCases: closedCases,
         winRate: `${winRatePercent}%`,
         billingChart: sysStats.billingChart || [],
         caseDistribution: sysStats.caseDistribution || []
@@ -105,8 +107,8 @@ const Dashboard = () => {
     },
     {
       label: 'Closed Cases',
-      value: stats.winRate,
-      change: 'Win Rate',
+      value: (stats.closedCases || 0).toString(),
+      change: stats.winRate,
       trend: 'up',
       icon: CheckCircle,
     },

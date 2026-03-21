@@ -15,8 +15,8 @@ const accessRequestSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['Admin', 'Attorney', 'Legal Staff'],
-      default: 'Attorney'
+      enum: ['Senior Lawyer', 'Junior Lawyer', 'Apprentice Lawyer'],
+      default: 'Junior Lawyer'
     },
     reason: {
       type: String,

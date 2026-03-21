@@ -4,61 +4,137 @@ import { Mail, Lock, Eye, EyeOff, Scale, AlertCircle, ShieldCheck, X, UserPlus, 
 import { useAuth } from '../context/AuthContext';
 
 const PermissionTable = ({ onClose }) => {
-  const permissions = [
-    { feature: 'User Management', admin: true, attorney: false, staff: false },
-    { feature: 'System Backup/Settings', admin: true, attorney: false, staff: false },
-    { feature: 'Case Management', admin: true, attorney: true, staff: true },
-    { feature: 'Client Profiles', admin: true, attorney: true, staff: true },
-    { feature: 'Document Management', admin: true, attorney: true, staff: true },
-    { feature: 'Financial/Invoicing', admin: true, attorney: true, staff: false },
-    { feature: 'Expense Tracking', admin: true, attorney: true, staff: true },
-    { feature: 'Global Search', admin: true, attorney: true, staff: true },
+  const permissionCategories = [
+    {
+      category: 'Cases',
+      permissions: [
+        { feature: 'View Cases', senior: 'All', junior: 'Own', apprentice: 'Assigned' },
+        { feature: 'Create Case', senior: '✓', junior: '✓', apprentice: '✗' },
+        { feature: 'Edit Case', senior: '✓', junior: 'Own only', apprentice: '✗' },
+        { feature: 'Close Case', senior: '✓', junior: '✗', apprentice: '✗' },
+        { feature: 'Delete Case', senior: '✓', junior: '✗', apprentice: '✗' },
+      ]
+    },
+    {
+      category: 'Documents',
+      permissions: [
+        { feature: 'Upload', senior: 'Any case', junior: 'Own cases', apprentice: 'Drafts only' },
+        { feature: 'Download', senior: '✓', junior: 'Own cases', apprentice: 'Assigned' },
+        { feature: 'Delete', senior: '✓', junior: '✗', apprentice: '✗' },
+      ]
+    },
+    {
+      category: 'Clients',
+      permissions: [
+        { feature: 'View', senior: 'All', junior: 'All', apprentice: 'Assigned' },
+        { feature: 'Create / Edit', senior: '✓', junior: '✓', apprentice: '✗' },
+      ]
+    },
+    {
+      category: 'Calendar',
+      permissions: [
+        { feature: 'View', senior: 'Full', junior: 'Full', apprentice: 'Read-only' },
+        { feature: 'Create / Edit Events', senior: '✓', junior: 'Own cases', apprentice: '✗' },
+      ]
+    },
+    {
+      category: 'Financial',
+      permissions: [
+        { feature: 'Record Expenses', senior: '✓', junior: 'Own cases', apprentice: '✗' },
+        { feature: 'Create Invoice', senior: 'Final', junior: 'Draft', apprentice: '✗' },
+        { feature: 'Approve Invoice', senior: '✓', junior: '✗', apprentice: '✗' },
+        { feature: 'View Reports', senior: '✓', junior: 'Limited', apprentice: '✗' },
+      ]
+    },
+    {
+      category: 'Admin',
+      permissions: [
+        { feature: 'Manage Users', senior: '✓', junior: '✗', apprentice: '✗' },
+        { feature: 'System Settings', senior: '✓', junior: '✗', apprentice: '✗' },
+        { feature: 'Audit Logs', senior: '✓', junior: '✗', apprentice: '✗' },
+        { feature: 'Backups', senior: '✓', junior: '✗', apprentice: '✗' },
+      ]
+    },
   ];
+
+  const renderBadge = (value) => {
+    if (value === '✓') return <Check className="w-4 h-4 text-status-active mx-auto" strokeWidth={3} />;
+    if (value === '✗') return <X className="w-4 h-4 text-gray-300 mx-auto" />;
+    return (
+      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md mx-auto inline-block ${
+        value === 'All' || value === 'Full' || value === 'Any case' || value === 'Final'
+          ? 'bg-green-50 text-green-600'
+          : value === 'Own' || value === 'Own only' || value === 'Own cases' || value === 'Limited' || value === 'Draft'
+          ? 'bg-amber-50 text-amber-600'
+          : 'bg-blue-50 text-blue-600'
+      }`}>
+        {value}
+      </span>
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-apple-lg overflow-hidden animate-in zoom-in-95 duration-200">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+      <div className="w-full max-w-3xl bg-white rounded-2xl shadow-apple-lg overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50 shrink-0">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary-100 text-primary-600 rounded-lg">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <h2 className="text-xl font-bold text-apple-text tracking-tight">System Permissions</h2>
+            <div>
+              <h2 className="text-xl font-bold text-apple-text tracking-tight">System Permissions</h2>
+              <p className="text-[11px] text-gray-500 font-medium mt-0.5">Role-based access control matrix</p>
+            </div>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
         
-        <div className="overflow-x-auto">
+        <div className="overflow-y-auto flex-1">
           <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="py-4 px-6 text-[11px] font-bold uppercase tracking-wider text-gray-500">Feature Area</th>
-                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">Admin</th>
-                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">Attorney</th>
-                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">Staff</th>
+            <thead className="sticky top-0 z-10 bg-white">
+              <tr className="bg-gray-50/80 border-b border-gray-100">
+                <th className="py-4 px-6 text-[11px] font-bold uppercase tracking-wider text-gray-500">Permission</th>
+                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="bg-green-50 text-green-700 px-2 py-0.5 rounded-md">Senior Lawyer</span>
+                  </div>
+                </th>
+                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded-md">Junior Lawyer</span>
+                  </div>
+                </th>
+                <th className="py-4 px-4 text-center text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="bg-blue-50 text-blue-700 px-2 py-0.5 rounded-md">Apprentice</span>
+                  </div>
+                </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
-              {permissions.map((p, idx) => (
-                <tr key={idx} className="hover:bg-gray-50/30 transition-colors">
-                  <td className="py-4 px-6 text-sm font-semibold text-apple-text">{p.feature}</td>
-                  <td className="py-4 px-4 text-center">
-                    {p.admin ? <Check className="w-5 h-5 text-status-active mx-auto" strokeWidth={3} /> : <X className="w-4 h-4 text-gray-200 mx-auto" />}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    {p.attorney ? <Check className="w-5 h-5 text-status-active mx-auto" strokeWidth={3} /> : <X className="w-4 h-4 text-gray-200 mx-auto" />}
-                  </td>
-                  <td className="py-4 px-4 text-center">
-                    {p.staff ? <Check className="w-5 h-5 text-status-active mx-auto" strokeWidth={3} /> : <X className="w-4 h-4 text-gray-200 mx-auto" />}
-                  </td>
-                </tr>
+            <tbody>
+              {permissionCategories.map((cat, catIdx) => (
+                <React.Fragment key={catIdx}>
+                  <tr className="bg-gray-50/30">
+                    <td colSpan="4" className="py-3 px-6 text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 border-t border-gray-100">
+                      {cat.category}
+                    </td>
+                  </tr>
+                  {cat.permissions.map((p, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50/30 transition-colors border-b border-gray-50">
+                      <td className="py-3 px-6 pl-10 text-sm font-semibold text-apple-text">{p.feature}</td>
+                      <td className="py-3 px-4 text-center">{renderBadge(p.senior)}</td>
+                      <td className="py-3 px-4 text-center">{renderBadge(p.junior)}</td>
+                      <td className="py-3 px-4 text-center">{renderBadge(p.apprentice)}</td>
+                    </tr>
+                  ))}
+                </React.Fragment>
               ))}
             </tbody>
           </table>
         </div>
-        <div className="p-6 bg-gray-50/50 text-center border-t border-gray-100">
+        <div className="p-5 bg-gray-50/50 text-center border-t border-gray-100 shrink-0">
           <p className="text-xs text-gray-500 font-medium">Please review these roles before requesting access to the system.</p>
         </div>
       </div>
@@ -75,7 +151,7 @@ const RequestAccessModal = ({ onClose }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    role: 'Attorney',
+    role: 'Junior Lawyer',
     reason: ''
   });
   
@@ -152,9 +228,9 @@ const RequestAccessModal = ({ onClose }) => {
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               >
-                <option value="Attorney">Attorney</option>
-                <option value="Legal Staff">Legal Staff</option>
-                <option value="Admin">System Administrator</option>
+                <option value="Senior Lawyer">Senior Lawyer</option>
+                <option value="Junior Lawyer">Junior Lawyer</option>
+                <option value="Apprentice Lawyer">Apprentice Lawyer</option>
               </select>
             </div>
             <div>

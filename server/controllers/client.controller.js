@@ -1,4 +1,5 @@
 const Client = require('../models/Client');
+const Case = require('../models/Case');
 
 // @desc    Register new client
 // @route   POST /api/clients
@@ -50,5 +51,43 @@ exports.addCommunicationLog = async (req, res) => {
     res.json(client);
   } catch (error) {
     res.status(500).json({ message: 'Failed to add communication log', error: error.message });
+  }
+};
+
+// @desc    Update client
+// @route   PUT /api/clients/:id
+// @access  Private
+exports.updateClient = async (req, res) => {
+  try {
+    const client = await Client.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+    if (!client) return res.status(404).json({ message: 'Client not found' });
+    res.json(client);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update client', error: error.message });
+  }
+};
+
+// @desc    Delete client
+// @route   DELETE /api/clients/:id
+// @access  Private/Admin
+exports.deleteClient = async (req, res) => {
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ message: 'Client not found' });
+
+    // Check for active cases
+    const activeCases = await Case.countDocuments({ client: req.params.id, status: { $ne: 'Closed' } });
+    if (activeCases > 0) {
+      return res.status(400).json({ message: 'Cannot delete client with active cases' });
+    }
+
+    await Client.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Client deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete client', error: error.message });
   }
 };

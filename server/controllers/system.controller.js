@@ -47,6 +47,7 @@ exports.getSystemHealth = async (req, res) => {
 exports.getSystemStats = async (req, res) => {
   try {
     const pendingInvoicesCount = await Invoice.countDocuments({ status: { $in: ['sent', 'draft'] } });
+    const closedCasesCount = await Case.countDocuments({ status: 'Closed' });
     
     // Total Revenue (Paid Invoices)
     const revenueAgg = await Invoice.aggregate([
@@ -71,19 +72,48 @@ exports.getSystemStats = async (req, res) => {
       color: d._id === 'Litigation' ? '#3b82f6' : d._id === 'Notarial' ? '#ef4444' : d._id === 'Oath Commissioner' ? '#22c55e' : '#f59e0b'
     }));
 
-    // Dummy Billing Chart Data for now, representing last 7 days
-    const billingChart = [
-      { name: 'Mon', value: 4000 },
-      { name: 'Tue', value: 3000 },
-      { name: 'Wed', value: 5000 },
-      { name: 'Thu', value: 4500 },
-      { name: 'Fri', value: 6000 },
-      { name: 'Sat', value: 3500 },
-      { name: 'Sun', value: Math.round(totalRevenue / 7) || 4200 },
-    ];
+    // Real Billing Chart Data for last 7 days
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const billingAgg = await Invoice.aggregate([
+      { 
+        $match: { 
+          status: 'paid',
+          updatedAt: { $gte: sevenDaysAgo }
+        } 
+      },
+      {
+        $group: {
+          _id: { $dayOfWeek: "$updatedAt" },
+          value: { $sum: "$totalAmount" },
+          date: { $min: "$updatedAt" }
+        }
+      },
+      { $sort: { date: 1 } }
+    ]);
+
+    // Ensure all 7 days are represented even if 0
+    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const currentDay = new Date().getDay(); // 0 is Sun
+    const last7Days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      last7Days.push(d.toLocaleDateString('en-US', { weekday: 'short' }));
+    }
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const billingChart = last7Days.map(day => {
+      // Find matches where dayNames mapping matches the numeric _id from Mongo
+      // Note: $dayOfWeek returns 1 (Sun) to 7 (Sat)
+      const match = billingAgg.find(b => dayNames[b._id - 1] === day);
+      return { name: day, value: match ? match.value : 0 };
+    });
 
     res.json({
       pendingInvoicesCount,
+      closedCasesCount, // New field for user
       totalRevenue,
       totalExpenses,
       caseDistribution: distribution,

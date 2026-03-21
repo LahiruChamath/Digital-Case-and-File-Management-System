@@ -17,7 +17,7 @@ import Avatar from '../common/Avatar';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/matters', label: 'Matter Management', icon: Briefcase },
+  { path: '/cases', label: 'Case Management', icon: Briefcase },
   { path: '/clients', label: 'Client Profiles', icon: Users },
   { path: '/calendar', label: 'Court Calendar', icon: Calendar },
   { path: '/documents', label: 'Documents', icon: FileText },

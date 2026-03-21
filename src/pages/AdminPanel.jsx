@@ -34,7 +34,7 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
-    name: '', email: '', password: '', role: 'Legal Staff'
+    name: '', email: '', password: '', role: 'Junior Lawyer'
   });
 
   const fetchUsers = async () => {
@@ -119,7 +119,7 @@ const AdminPanel = () => {
     try {
       await adminService.createUser(newUserForm);
       setIsAddModalOpen(false);
-      setNewUserForm({ name: '', email: '', password: '', role: 'Legal Staff' });
+      setNewUserForm({ name: '', email: '', password: '', role: 'Junior Lawyer' });
       fetchUsers();
       showToast('User successfully added!', 'success');
     } catch (error) {
@@ -144,6 +144,17 @@ const AdminPanel = () => {
       fetchRequests();
     } catch (error) {
       showToast(error.response?.data?.message || 'Failed to reject request', 'error');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+    try {
+      await adminService.deleteUser(userId);
+      setUsers(users.filter(u => u._id !== userId));
+      showToast('User deleted successfully', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to delete user', 'error');
     }
   };
 
@@ -226,9 +237,9 @@ const AdminPanel = () => {
                             onChange={(e) => handleRoleChange(user._id, e.target.value)}
                             className="bg-gray-100 border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary-500/20 transition-all cursor-pointer hover:bg-gray-200"
                           >
-                            <option value="Admin">Admin</option>
-                            <option value="Attorney">Attorney</option>
-                            <option value="Legal Staff">Legal Staff</option>
+                            <option value="Senior Lawyer">Senior Lawyer</option>
+                            <option value="Junior Lawyer">Junior Lawyer</option>
+                            <option value="Apprentice Lawyer">Apprentice Lawyer</option>
                           </select>
                         </td>
                         <td className="py-4 px-6">
@@ -259,7 +270,11 @@ const AdminPanel = () => {
                             >
                               {user.isActive ? 'Deactivate' : 'Activate'}
                             </button>
-                            <button className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                            <button 
+                              onClick={() => handleDeleteUser(user._id)}
+                              className="p-2 text-gray-400 hover:text-status-overdue hover:bg-status-overdue/10 rounded-lg transition-colors"
+                              title="Delete User"
+                            >
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </div>
@@ -479,7 +494,7 @@ const AdminPanel = () => {
                       <tbody className="divide-y divide-gray-100">
                         {backups.map((b) => (
                           <tr key={b._id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-4 px-6 text-sm font-semibold text-apple-text">{b.filename}</td>
+                            <td className="py-4 px-6 text-sm font-semibold text-apple-text">{b.name}</td>
                             <td className="py-4 px-6 text-sm text-gray-500 font-medium">{(b.size / 1024).toFixed(2)} <span className="text-[10px] uppercase font-bold ml-0.5">KB</span></td>
                             <td className="py-4 px-6">
                               <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">{b.triggeredBy?.name || 'System'}</span>
@@ -549,9 +564,9 @@ const AdminPanel = () => {
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">System Role</label>
                     <select className="clean-input" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
-                      <option value="Admin">Admin</option>
-                      <option value="Attorney">Attorney</option>
-                      <option value="Legal Staff">Legal Staff</option>
+                      <option value="Senior Lawyer">Senior Lawyer</option>
+                      <option value="Junior Lawyer">Junior Lawyer</option>
+                      <option value="Apprentice Lawyer">Apprentice Lawyer</option>
                     </select>
                   </div>
                   <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">

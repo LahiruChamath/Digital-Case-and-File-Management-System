@@ -21,6 +21,11 @@ export const adminService = {
     return data;
   },
 
+  deleteUser: async (userId) => {
+    const { data } = await api.delete(`/admin/users/${userId}`);
+    return data;
+  },
+
   getSystemHealth: async () => {
     const { data } = await api.get('/admin/system/health');
     return data;

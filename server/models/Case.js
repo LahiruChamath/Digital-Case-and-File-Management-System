@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Counter  = require('./Counter');
 
 const caseSchema = new mongoose.Schema({
   title: {
@@ -73,6 +74,17 @@ const caseSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  }
+});
+
+caseSchema.pre('validate', async function () {
+  if (!this.caseNumber) {
+    const counter = await Counter.findOneAndUpdate(
+      { _id: 'caseNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.caseNumber = `CASE-${String(counter.seq).padStart(5, '0')}`;
   }
 });
 

@@ -248,8 +248,8 @@ const CaseManagement = () => {
                 </div>
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Case Number</label>
-                  <input type="text" required className="clean-input" placeholder="LIT-24-001"
-                    value={newCaseForm.caseNumber} onChange={e => setNewCaseForm({...newCaseForm, caseNumber: e.target.value})} />
+                  <input type="text" disabled className="clean-input bg-gray-50 cursor-not-allowed font-mono text-gray-400" placeholder="CASE-00001 (Auto)"
+                    value={newCaseForm.caseNumber} />
                 </div>
               </div>
               

@@ -11,8 +11,18 @@ export const caseService = {
     return data;
   },
 
+  update: async (id, caseData) => {
+    const { data } = await api.put(`/cases/${id}`, caseData);
+    return data;
+  },
+
   updateStatus: async (id, status) => {
     const { data } = await api.put(`/cases/${id}/status`, { status });
+    return data;
+  },
+
+  close: async (id) => {
+    const { data } = await api.put(`/cases/${id}/close`);
     return data;
   },
 

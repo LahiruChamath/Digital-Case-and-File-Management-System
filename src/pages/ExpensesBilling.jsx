@@ -7,7 +7,7 @@ import {
   Clock,
   Download,
   MoreVertical,
-  DollarSign,
+  Banknote,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import { expenseService } from '../services/expenseService';
@@ -103,7 +103,7 @@ const ExpensesBilling = () => {
   const dynamicFinancialCards = [
     {
       label: 'Total Revenue',
-      value: sysStats ? `$${sysStats.totalRevenue.toFixed(2)}` : '$0.00',
+      value: sysStats ? `LKR ${sysStats.totalRevenue.toLocaleString()}` : 'LKR 0',
       change: 'Paid Invoices',
       icon: TrendingUp,
       iconBg: 'bg-green-50 text-green-600',
@@ -119,7 +119,7 @@ const ExpensesBilling = () => {
     },
     {
       label: 'Firm Expenses',
-      value: sysStats ? `$${sysStats.totalExpenses.toFixed(2)}` : '$0.00',
+      value: sysStats ? `LKR ${sysStats.totalExpenses.toLocaleString()}` : 'LKR 0',
       change: 'Logged Expenses',
       icon: TrendingDown,
       iconBg: 'bg-red-50 text-red-600',
@@ -198,7 +198,7 @@ const ExpensesBilling = () => {
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{new Date(inv.createdAt).toLocaleDateString()}</p>
                     </td>
                     <td className="py-4 px-6 text-sm font-semibold text-gray-600">{inv.client?.name || 'Unknown Client'}</td>
-                    <td className="py-4 px-6 text-sm font-bold text-apple-text">${inv.totalAmount.toFixed(2)}</td>
+                    <td className="py-4 px-6 text-sm font-bold text-apple-text">LKR {inv.totalAmount.toLocaleString()}</td>
                     <td className="py-4 px-6">
                       <StatusBadge status={inv.status.charAt(0).toUpperCase() + inv.status.slice(1)} />
                     </td>
@@ -240,10 +240,10 @@ const ExpensesBilling = () => {
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Amount</label>
                 <div className="relative group">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+                  <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     required
                     placeholder="0.00"
                     value={expenseForm.amount}
@@ -318,7 +318,7 @@ const ExpensesBilling = () => {
                     <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold tracking-wider uppercase">{exp.category}</span>
                   </td>
                   <td className="py-4 px-6 text-sm font-medium text-gray-600">{exp.case?.title || 'Unknown Case'}</td>
-                  <td className="py-4 px-6 text-sm font-bold text-apple-text text-right">${exp.amount.toFixed(2)}</td>
+                  <td className="py-4 px-6 text-sm font-bold text-apple-text text-right">LKR {exp.amount.toLocaleString()}</td>
                 </tr>
               ))}
               {expenses.length === 0 && (

@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-03-11T00:17:05.654Z",
+  "users": [
+    {
+      "_id": "69b055f894014ccb62338f34",
+      "name": "System Administrator",
+      "email": "admin@lawfirm.com",
+      "password": "$2b$10$EEGq2wenpNMEYgUMnnWz4.34ynESIm91KqabaiQImL2lnfZ0uEekm",
+      "role": "Admin",
+      "isActive": true,
+      "createdAt": "2026-03-10T17:33:44.909Z",
+      "__v": 0
+    }
+  ],
+  "cases": [
+    {
+      "_id": "69b0b014ad688cdfdddb556c",
+      "title": "Test Matter",
+      "caseNumber": "C 1",
+      "client": "69b0afe9ad688cdfdddb5561",
+      "type": "Litigation",
+      "court": "",
+      "status": "Active",
+      "priority": "Medium",
+      "assignedTo": [],
+      "timeline": [
+        {
+          "activity": "Case created",
+          "performedBy": "69b055f894014ccb62338f34",
+          "_id": "69b0b014ad688cdfdddb556d",
+          "timestamp": "2026-03-10T23:58:12.960Z"
+        }
+      ],
+      "notes": [],
+      "createdAt": "2026-03-10T23:58:12.960Z",
+      "updatedAt": "2026-03-10T23:58:12.960Z",
+      "__v": 0
+    }
+  ],
+  "version": "1.0.0"
+}

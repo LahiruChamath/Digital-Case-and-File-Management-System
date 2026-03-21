@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Plus, Edit2, CheckCircle2, MoreVertical, Briefcase, Calendar, MapPin, AlertCircle, TrendingUp, Filter, Sparkles, X } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import PriorityBadge from '../components/common/PriorityBadge';
@@ -6,6 +6,85 @@ import Avatar from '../components/common/Avatar';
 import { caseService } from '../services/caseService';
 import { clientService } from '../services/clientService';
 import { useToast } from '../context/ToastContext';
+
+// Defined at module level to prevent React from treating it as a new
+// component type on every parent re-render (which causes full unmount/remount).
+const CaseTable = ({ data, title, onEdit, onClose }) => (
+  <div className="card overflow-hidden flex flex-col mb-8">
+    <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+      <h3 className="text-sm font-bold text-apple-text uppercase tracking-widest">{title}</h3>
+      <span className="text-[10px] font-bold bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-500">{data.length} Cases</span>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="border-b border-gray-100">
+            <th className="table-header py-4 px-6">Case Info</th>
+            <th className="table-header py-4 px-6">Client</th>
+            <th className="table-header py-4 px-6">Practice Area</th>
+            <th className="table-header py-4 px-6">Status</th>
+            <th className="table-header py-4 px-6">Priority</th>
+            <th className="table-header py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {data.map((item) => (
+            <tr key={item._id} className="hover:bg-gray-50/50 transition-colors group">
+              <td className="py-4 px-6">
+                <p className="text-sm font-bold text-apple-text group-hover:text-primary-600 transition-colors">{item.title}</p>
+                <p className="text-[11px] font-semibold text-gray-500 mt-1.5 uppercase tracking-wider">{item.caseNumber}</p>
+              </td>
+              <td className="py-4 px-6">
+                <div className="flex items-center gap-3">
+                  <Avatar initials={item.client?.name ? item.client.name.split(' ').map(n => n[0]).join('') : '??'} size="sm" />
+                  <span className="text-sm font-semibold text-gray-700">{item.client?.name || 'Unknown'}</span>
+                </div>
+              </td>
+              <td className="py-4 px-6">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-3.5 h-3.5 text-gray-400" />
+                  <span className="text-xs font-semibold text-gray-600">{item.type}</span>
+                </div>
+              </td>
+              <td className="py-4 px-6"><StatusBadge status={item.status} /></td>
+              <td className="py-4 px-6"><PriorityBadge priority={item.priority} /></td>
+              <td className="py-4 px-6">
+                <div className="flex items-center justify-end gap-1">
+                  <button
+                    onClick={() => onEdit(item)}
+                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    title="Update Case"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  {item.status !== 'Closed' && (
+                    <button
+                      onClick={() => onClose(item._id)}
+                      className="p-2 text-gray-400 hover:text-status-active hover:bg-status-active/10 rounded-lg transition-colors"
+                      title="Mark as Closed"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+          {data.length === 0 && (
+            <tr>
+              <td colSpan="6" className="py-16 text-center text-sm font-medium text-gray-500">
+                No {title.toLowerCase()} found matching your criteria.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  </div>
+);
 
 const CaseManagement = () => {
   const { showToast } = useToast();
@@ -25,7 +104,7 @@ const CaseManagement = () => {
     type: ''
   });
 
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     setLoading(true);
     try {
       const [casesData, clientsData] = await Promise.all([
@@ -47,7 +126,12 @@ const CaseManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchTerm, filters]);
+
+  const handleEditOpen = useCallback((item) => {
+    setCurrentCase(item);
+    setIsEditModalOpen(true);
+  }, []);
 
   const handleAddSubmit = async (e) => {
     e.preventDefault();
@@ -87,91 +171,10 @@ const CaseManagement = () => {
 
   useEffect(() => {
     fetchCases();
-  }, [searchTerm, filters]);
+  }, [fetchCases]);
 
   const activeCases = cases.filter(c => c.status !== 'Closed');
   const closedCasesList = cases.filter(c => c.status === 'Closed');
-
-  const CaseTable = ({ data, title }) => (
-    <div className="card overflow-hidden flex flex-col mb-8">
-      <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-        <h3 className="text-sm font-bold text-apple-text uppercase tracking-widest">{title}</h3>
-        <span className="text-[10px] font-bold bg-white border border-gray-200 px-2 py-0.5 rounded-full text-gray-500">{data.length} Cases</span>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-100">
-              <th className="table-header py-4 px-6">Case Info</th>
-              <th className="table-header py-4 px-6">Client</th>
-              <th className="table-header py-4 px-6">Practice Area</th>
-              <th className="table-header py-4 px-6">Status</th>
-              <th className="table-header py-4 px-6">Priority</th>
-              <th className="table-header py-4 px-6 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {data.map((item) => (
-              <tr key={item._id} className="hover:bg-gray-50/50 transition-colors group">
-                <td className="py-4 px-6">
-                  <p className="text-sm font-bold text-apple-text group-hover:text-primary-600 transition-colors">{item.title}</p>
-                  <p className="text-[11px] font-semibold text-gray-500 mt-1.5 uppercase tracking-wider">{item.caseNumber}</p>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-3">
-                    <Avatar initials={item.client?.name ? item.client.name.split(' ').map(n => n[0]).join('') : '??'} size="sm" />
-                    <span className="text-sm font-semibold text-gray-700">{item.client?.name || 'Unknown'}</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="flex items-center gap-2">
-                    <Briefcase className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-xs font-semibold text-gray-600">{item.type}</span>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <StatusBadge status={item.status} />
-                </td>
-                <td className="py-4 px-6">
-                  <PriorityBadge priority={item.priority} />
-                </td>
-                <td className="py-4 px-6">
-                  <div className="flex items-center justify-end gap-1">
-                    <button 
-                      onClick={() => { setCurrentCase(item); setIsEditModalOpen(true); }}
-                      className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                      title="Update Case"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    {item.status !== 'Closed' && (
-                      <button 
-                        onClick={() => handleCloseCase(item._id)}
-                        className="p-2 text-gray-400 hover:text-status-active hover:bg-status-active/10 rounded-lg transition-colors"
-                        title="Mark as Closed"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {data.length === 0 && (
-              <tr>
-                <td colSpan="6" className="py-16 text-center text-sm font-medium text-gray-500">
-                   No {title.toLowerCase()} found matching your criteria.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -226,8 +229,8 @@ const CaseManagement = () => {
         </div>
       ) : (
         <>
-          <CaseTable data={activeCases} title="Active Cases" />
-          <CaseTable data={closedCasesList} title="Closed Cases" />
+          <CaseTable data={activeCases} title="Active Cases" onEdit={handleEditOpen} onClose={handleCloseCase} />
+          <CaseTable data={closedCasesList} title="Closed Cases" onEdit={handleEditOpen} onClose={handleCloseCase} />
         </>
       )}
 

@@ -46,52 +46,59 @@ exports.getSystemHealth = async (req, res) => {
 // @access  Private/Admin
 exports.getSystemStats = async (req, res) => {
   try {
-    const pendingInvoicesCount = await Invoice.countDocuments({ status: { $in: ['sent', 'draft'] } });
-    const closedCasesCount = await Case.countDocuments({ status: 'Closed' });
-    
-    // Total Revenue (Paid Invoices)
-    const revenueAgg = await Invoice.aggregate([
-      { $match: { status: 'paid' } },
-      { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Run all DB operations in parallel for best performance
+    const [
+      pendingInvoicesCount,
+      closedCasesCount,
+      activeCasesCount,
+      totalClientsCount,
+      revenueAgg,
+      expenseAgg,
+      caseDist,
+      billingAgg
+    ] = await Promise.all([
+      Invoice.countDocuments({ status: { $in: ['sent', 'draft'] } }),
+      Case.countDocuments({ status: 'Closed' }),
+      Case.countDocuments({ status: { $ne: 'Closed' } }),
+      require('../models/Client').countDocuments(),
+      Invoice.aggregate([
+        { $match: { status: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]),
+      Expense.aggregate([
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      Case.aggregate([
+        { $group: { _id: '$type', count: { $sum: 1 } } }
+      ]),
+      Invoice.aggregate([
+        {
+          $match: {
+            status: 'paid',
+            updatedAt: { $gte: sevenDaysAgo }
+          }
+        },
+        {
+          $group: {
+            _id: { $dayOfWeek: '$updatedAt' },
+            value: { $sum: '$totalAmount' },
+            date: { $min: '$updatedAt' }
+          }
+        },
+        { $sort: { date: 1 } }
+      ])
     ]);
+
     const totalRevenue = revenueAgg[0]?.total || 0;
-
-    // Total Expenses
-    const expenseAgg = await Expense.aggregate([
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]);
     const totalExpenses = expenseAgg[0]?.total || 0;
-
-    // Case Distribution
-    const caseDist = await Case.aggregate([
-      { $group: { _id: '$type', count: { $sum: 1 } } }
-    ]);
     const distribution = caseDist.map(d => ({
       name: d._id,
       value: d.count,
       color: d._id === 'Litigation' ? '#3b82f6' : d._id === 'Notarial' ? '#ef4444' : d._id === 'Oath Commissioner' ? '#22c55e' : '#f59e0b'
     }));
-
-    // Real Billing Chart Data for last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const billingAgg = await Invoice.aggregate([
-      { 
-        $match: { 
-          status: 'paid',
-          updatedAt: { $gte: sevenDaysAgo }
-        } 
-      },
-      {
-        $group: {
-          _id: { $dayOfWeek: "$updatedAt" },
-          value: { $sum: "$totalAmount" },
-          date: { $min: "$updatedAt" }
-        }
-      },
-      { $sort: { date: 1 } }
-    ]);
 
     // Ensure all 7 days are represented even if 0
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -113,7 +120,9 @@ exports.getSystemStats = async (req, res) => {
 
     res.json({
       pendingInvoicesCount,
-      closedCasesCount, // New field for user
+      closedCasesCount,
+      activeCasesCount,
+      totalClientsCount,
       totalRevenue,
       totalExpenses,
       caseDistribution: distribution,

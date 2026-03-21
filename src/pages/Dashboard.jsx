@@ -13,8 +13,6 @@ import {
 } from 'lucide-react';
 import BillingChart from '../components/charts/BillingChart';
 import CaseDistributionChart from '../components/charts/CaseDistributionChart';
-import { caseService } from '../services/caseService';
-import { clientService } from '../services/clientService';
 import { calendarService } from '../services/calendarService';
 import { notificationService } from '../services/notificationService';
 import { adminService } from '../services/adminService';
@@ -36,22 +34,25 @@ const Dashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [cases, clients, events, notifs, sysStats] = await Promise.all([
-        caseService.getAll(),
-        clientService.getAll(),
+      // Fetch only what's needed: events, notifications, and system stats
+      // Active case count, client count, invoices etc. all come from sysStats
+      const [events, notifs, sysStats] = await Promise.all([
         calendarService.getAll(),
         notificationService.getAll(),
         adminService.getSystemStats()
       ]);
 
       const closedCases = sysStats.closedCasesCount || 0;
-      const winRatePercent = cases.length > 0 ? Math.round((closedCases / cases.length) * 100) : 0;
+      const activeCases = sysStats.activeCasesCount || 0;
+      const totalClients = sysStats.totalClientsCount || 0;
+      const totalCases = activeCases + closedCases;
+      const winRatePercent = totalCases > 0 ? Math.round((closedCases / totalCases) * 100) : 0;
 
       setStats({
-        activeCases: cases.filter(c => c.status !== 'Closed').length,
-        totalClients: clients.length,
+        activeCases,
+        totalClients,
         pendingInvoices: sysStats.pendingInvoicesCount || 0,
-        closedCases: closedCases,
+        closedCases,
         winRate: `${winRatePercent}%`,
         billingChart: sysStats.billingChart || [],
         caseDistribution: sysStats.caseDistribution || []

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Counter  = require('./Counter');
 
 const invoiceItemSchema = new mongoose.Schema({
   description: { type: String, required: true },
@@ -35,8 +36,14 @@ const invoiceSchema = new mongoose.Schema(
 
 invoiceSchema.pre('validate', async function () {
   if (!this.invoiceNumber) {
-    const count = await mongoose.model('Invoice').countDocuments();
-    this.invoiceNumber = `INV-${String(count + 1).padStart(5, '0')}`;
+    // Atomic counter — findOneAndUpdate with $inc is a single MongoDB operation.
+    // Guaranteed unique even when two users create invoices at the exact same time.
+    const counter = await Counter.findOneAndUpdate(
+      { _id: 'invoiceNumber' },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    this.invoiceNumber = `INV-${String(counter.seq).padStart(5, '0')}`;
   }
 });
 

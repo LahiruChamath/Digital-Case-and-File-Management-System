@@ -76,6 +76,13 @@ const caseSchema = new mongoose.Schema({
   }
 });
 
+// Indexes for common query patterns
+caseSchema.index({ status: 1 });
+caseSchema.index({ client: 1 });
+caseSchema.index({ type: 1 });
+// Note: caseNumber is already indexed via unique:true on the field
+caseSchema.index({ status: 1, type: 1 });
+
 const Case = mongoose.model('Case', caseSchema);
 
 module.exports = Case;

@@ -149,7 +149,13 @@ const CaseManagement = () => {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
-      const updated = await caseService.update(currentCase._id, currentCase);
+      // Extract client ID in case it's a populated object from the backend
+      const payload = {
+        ...currentCase,
+        client: typeof currentCase.client === 'object' ? currentCase.client._id : currentCase.client
+      };
+      
+      const updated = await caseService.update(currentCase._id, payload);
       setCases(cases.map(c => c._id === updated._id ? updated : c));
       setIsEditModalOpen(false);
       showToast('Case updated successfully!', 'success');

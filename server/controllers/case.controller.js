@@ -86,10 +86,17 @@ exports.addCaseNote = async (req, res) => {
 // @access  Private
 exports.updateCase = async (req, res) => {
   try {
+    // Prevent Mongo conflict: we cannot update and $push to 'timeline' simultaneously
+    const updateData = { ...req.body };
+    delete updateData._id;
+    delete updateData.__v;
+    delete updateData.timeline;
+    delete updateData.notes;
+
     const updatedCase = await Case.findByIdAndUpdate(
       req.params.id,
       { 
-        ...req.body,
+        $set: updateData,
         $push: { timeline: { activity: 'Case details updated', performedBy: req.user._id } }
       },
       { new: true, runValidators: true }

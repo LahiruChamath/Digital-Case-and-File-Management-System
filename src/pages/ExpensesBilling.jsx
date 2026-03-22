@@ -8,6 +8,7 @@ import {
   Download,
   MoreVertical,
   Banknote,
+  Check,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import { expenseService } from '../services/expenseService';
@@ -80,12 +81,34 @@ const ExpensesBilling = () => {
     try {
       const selectedCase = cases.find(c => c._id === expenseForm.caseId);
       await invoiceService.generateAndDownload(expenseForm.caseId, selectedCase?.caseNumber || 'INV');
-      showToast('Invoice generated successfully!', 'success');
-      fetchData(); // Auto reload to show the newly generated invoice in the table
+      showToast('Invoice generated and downloaded!', 'success');
+      fetchData();
     } catch (error) {
       showToast('Failed to generate invoice', 'error');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadInvoiceFromTable = async (inv) => {
+    setDownloading(true);
+    try {
+      await invoiceService.generateAndDownload(inv.case._id, inv.invoiceNumber);
+      showToast('Invoice downloaded successfully!', 'success');
+    } catch (error) {
+      showToast('Failed to download invoice', 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await invoiceService.updateStatus(id, 'paid');
+      showToast('Invoice marked as paid!', 'success');
+      fetchData(); // Refresh to update charts & table
+    } catch (error) {
+      showToast('Failed to update invoice', 'error');
     }
   };
 
@@ -204,7 +227,20 @@ const ExpensesBilling = () => {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-1">
-                        <button className="p-2 hover:bg-white rounded-lg transition-colors text-gray-400 hover:text-primary-600 shadow-sm border border-transparent hover:border-gray-200">
+                        {inv.status !== 'paid' && (
+                          <button 
+                            onClick={() => handleMarkAsPaid(inv._id)}
+                            className="p-2 hover:bg-white rounded-lg transition-colors text-status-active border border-transparent hover:border-status-active/20 hover:bg-status-active/5"
+                            title="Mark as Paid"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleDownloadInvoiceFromTable(inv)}
+                          disabled={downloading}
+                          className="p-2 hover:bg-white rounded-lg transition-colors text-gray-400 hover:text-primary-600 shadow-sm border border-transparent hover:border-gray-200"
+                        >
                           <Download className="w-4 h-4" />
                         </button>
                         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-800">

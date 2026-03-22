@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Upload, Filter, FileText, Calendar, MoreVertical, FolderOpen, HardDrive, Download, Trash2 } from 'lucide-react';
 import { documentService } from '../services/documentService';
+import { API_BASE_URL } from '../services/api';
 import { caseService } from '../services/caseService';
 import { useToast } from '../context/ToastContext';
 
@@ -70,7 +71,9 @@ const Documents = () => {
   };
 
   const handleDownload = (url) => {
-    window.open(url, '_blank');
+    if (!url) return showToast('No file URL available', 'error');
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    window.open(fullUrl, '_blank');
   };
 
   const handleDelete = async (e, id) => {

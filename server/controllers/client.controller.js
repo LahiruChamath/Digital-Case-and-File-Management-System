@@ -46,7 +46,7 @@ exports.addCommunicationLog = async (req, res) => {
     const client = await Client.findByIdAndUpdate(
       req.params.id,
       { $push: { communicationHistory: { ...req.body, loggedBy: req.user._id } } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json(client);
   } catch (error) {
@@ -62,7 +62,7 @@ exports.updateClient = async (req, res) => {
     const client = await Client.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     if (!client) return res.status(404).json({ message: 'Client not found' });
     res.json(client);

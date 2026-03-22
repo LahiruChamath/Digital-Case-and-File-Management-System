@@ -82,7 +82,7 @@ caseSchema.pre('validate', async function () {
     const counter = await Counter.findOneAndUpdate(
       { _id: 'caseNumber' },
       { $inc: { seq: 1 } },
-      { new: true, upsert: true }
+      { returnDocument: 'after', upsert: true }
     );
     this.caseNumber = `CASE-${String(counter.seq).padStart(5, '0')}`;
   }

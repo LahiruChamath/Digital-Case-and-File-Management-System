@@ -23,5 +23,9 @@ export const invoiceService = {
   getAll: async () => {
     const { data } = await api.get('/invoices');
     return data;
+  },
+  updateStatus: async (id, status) => {
+    const { data } = await api.put(`/invoices/${id}/status`, { status });
+    return data;
   }
 };

@@ -127,3 +127,21 @@ exports.getAllInvoices = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch invoices', error: error.message });
   }
 };
+
+// @desc    Update invoice status
+// @route   PUT /api/invoices/:id/status
+// @access  Private
+exports.updateInvoiceStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updateData = { status };
+    if (status === 'paid') {
+      updateData.paidDate = Date.now();
+    }
+    const invoice = await Invoice.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
+    if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+    res.json(invoice);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update invoice', error: error.message });
+  }
+};

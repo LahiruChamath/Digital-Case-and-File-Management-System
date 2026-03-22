@@ -80,7 +80,7 @@ exports.updateCaseStatus = async (req, res) => {
         status,
         $push: { timeline: { activity: `Status changed to ${status}`, performedBy: req.user._id } }
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json(updatedCase);
   } catch (error) {
@@ -97,7 +97,7 @@ exports.addCaseNote = async (req, res) => {
     const updatedCase = await Case.findByIdAndUpdate(
       req.params.id,
       { $push: { notes: { content, author: req.user._id } } },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json(updatedCase);
   } catch (error) {
@@ -123,7 +123,7 @@ exports.updateCase = async (req, res) => {
         $set: updateData,
         $push: { timeline: { activity: 'Case details updated', performedBy: req.user._id } }
       },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     ).populate('client', 'name');
     if (!updatedCase) return res.status(404).json({ message: 'Case not found' });
     res.json(updatedCase);
@@ -143,7 +143,7 @@ exports.closeCase = async (req, res) => {
         status: 'Closed',
         $push: { timeline: { activity: 'Case marked as Closed', performedBy: req.user._id } }
       },
-      { new: true }
+      { returnDocument: 'after' }
     ).populate('client', 'name');
     if (!closedCase) return res.status(404).json({ message: 'Case not found' });
     res.json(closedCase);

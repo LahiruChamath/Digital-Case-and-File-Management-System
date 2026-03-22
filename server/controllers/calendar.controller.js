@@ -51,7 +51,7 @@ exports.getEvents = async (req, res) => {
 // @access  Private
 exports.updateEvent = async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     res.json(event);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update event', error: error.message });

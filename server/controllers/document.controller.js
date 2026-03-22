@@ -7,6 +7,10 @@ const { uploadFile, deleteFile } = require('../utils/fileUpload');
 // @route   POST /api/documents/upload
 // @access  Private
 exports.uploadDocument = async (req, res) => {
+  console.log('--- Upload Request Started ---');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload a file' });

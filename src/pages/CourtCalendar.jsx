@@ -8,12 +8,14 @@ const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 const CourtCalendar = () => {
   const { showToast } = useToast();
-  const [currentMonth] = useState('February 2026');
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState('shared');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [newEventForm, setNewEventForm] = useState({
     title: '', type: 'Court Date', case: '', start: '', location: '', description: ''
   });
@@ -59,14 +61,31 @@ const CourtCalendar = () => {
     ? events 
     : events.filter(e => e.createdBy?._id === currentUser?._id);
 
+  // Filter events by the current viewing month/year
+  const eventsInMonth = filteredEvents.filter(e => {
+    const d = new Date(e.start);
+    return d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+  });
+
   const mappedEvents = {};
-  filteredEvents.forEach(event => {
+  eventsInMonth.forEach(event => {
     const day = new Date(event.start).getDate();
     if (!mappedEvents[day]) mappedEvents[day] = [];
+    
+    let colorClass = 'bg-gray-100 text-gray-600 border-l-2 border-l-gray-400';
+    if (event.status === 'Done') {
+      colorClass = 'bg-gray-50 text-gray-400 border-l-2 border-l-gray-300 opacity-60 line-through';
+    } else {
+      if (event.type === 'Court Date') {
+        colorClass = 'bg-status-overdue/10 text-status-overdue border-l-2 border-l-status-overdue animate-blink';
+      } else if (event.type === 'Meeting') {
+        colorClass = 'bg-blue-50 text-blue-600 border-l-2 border-l-blue-500 animate-blink';
+      }
+    }
+
     mappedEvents[day].push({
       title: event.title,
-      color: event.type === 'Court Date' ? 'bg-status-overdue/10 text-status-overdue border-l-2 border-l-status-overdue' : 
-             event.type === 'Meeting' ? 'bg-blue-50 text-blue-600 border-l-2 border-l-blue-500' : 'bg-gray-100 text-gray-600 border-l-2 border-l-gray-400',
+      color: colorClass,
       ...event
     });
   });
@@ -77,13 +96,68 @@ const CourtCalendar = () => {
     .slice(0, 5);
 
   const generateCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Get the first day of the month
+    const firstDay = new Date(year, month, 1).getDay();
+    // Get the number of days in the month
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    // Get the number of days in the previous month
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
     const days = [];
-    for (let i = 26; i <= 31; i++) days.push({ day: i, isCurrentMonth: false });
-    for (let i = 1; i <= 28; i++) days.push({ day: i, isCurrentMonth: true });
+    
+    // Add days from the previous month
+    for (let i = firstDay - 1; i >= 0; i--) {
+      days.push({ day: daysInPrevMonth - i, isCurrentMonth: false });
+    }
+    
+    // Add days of the current month
+    for (let i = 1; i <= daysInMonth; i++) {
+      days.push({ day: i, isCurrentMonth: true });
+    }
+    
+    // Fill the rest of the grid with next month's days (up to 42 cells total)
+    const remainingCells = 42 - days.length;
+    for (let i = 1; i <= remainingCells; i++) {
+      days.push({ day: i, isCurrentMonth: false });
+    }
+    
     return days;
   };
 
   const calendarDays = generateCalendarDays();
+  const currentMonthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  };
+
+  const handleToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const handleToggleDone = async (event) => {
+    try {
+      const newStatus = event.status === 'Done' ? 'Pending' : 'Done';
+      const updatedEvent = await calendarService.update(event._id, { status: newStatus });
+      setEvents(events.map(e => e._id === event._id ? updatedEvent : e));
+      setIsViewModalOpen(false);
+      showToast(`Event marked as ${newStatus}`, 'success');
+    } catch (error) {
+      showToast('Failed to update event status', 'error');
+    }
+  };
+
+  const handleOpenDetails = (event) => {
+    setSelectedEvent(event);
+    setIsViewModalOpen(true);
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -116,45 +190,54 @@ const CourtCalendar = () => {
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="col-span-1 xl:col-span-9 card p-6">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-xl font-bold text-apple-text tracking-tight">{currentMonth}</h2>
+            <h2 className="text-xl font-bold text-apple-text tracking-tight">{currentMonthName}</h2>
             <div className="flex items-center gap-2">
-              <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
-              <button className="px-4 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Today</button>
-              <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronRight className="w-5 h-5" /></button>
+              <button onClick={handlePrevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronLeft className="w-5 h-5" /></button>
+              <button onClick={handleToday} className="px-4 py-1.5 text-xs font-bold text-gray-700 uppercase tracking-wider bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">Today</button>
+              <button onClick={handleNextMonth} className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"><ChevronRight className="w-5 h-5" /></button>
             </div>
           </div>
 
-          <div className="grid grid-cols-7 mb-2">
-            {daysOfWeek.map((day) => (
-              <div key={day} className="text-center text-[10px] font-bold text-gray-400 uppercase py-2 tracking-widest">{day}</div>
-            ))}
-          </div>
+          <div className="overflow-x-auto">
+            <div className="min-w-[700px] md:min-w-0">
+              <div className="grid grid-cols-7 mb-2 px-1">
+                {daysOfWeek.map((day) => (
+                  <div key={day} className="text-center text-[10px] font-bold text-gray-400 uppercase py-2 tracking-widest">{day}</div>
+                ))}
+              </div>
 
-          {loading ? (
-            <div className="flex justify-center p-20 border-t border-gray-100">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-7 border-t border-l border-gray-100 rounded-b-xl overflow-hidden bg-gray-50/30">
-              {calendarDays.map((item, index) => (
+              {loading ? (
+                <div className="flex justify-center p-20 border-t border-gray-100">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 border-t border-l border-gray-100 rounded-b-xl overflow-hidden bg-gray-50/30">
+              {calendarDays.map((item, index) => {
+                const isToday = item.isCurrentMonth && item.day === new Date().getDate() && currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+                return (
                 <div key={index} className={`min-h-[120px] border-r border-b border-gray-100 p-2 transition-colors hover:bg-gray-50 ${!item.isCurrentMonth ? 'bg-gray-50/50' : 'bg-white'}`}>
-                  <span className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded-full font-bold ${!item.isCurrentMonth ? 'text-gray-400' : item.day === 14 ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-700'}`}>
+                  <span className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded-full font-bold ${!item.isCurrentMonth ? 'text-gray-400' : isToday ? 'bg-primary-500 text-white shadow-sm' : 'text-gray-700'}`}>
                     {item.day}
                   </span>
                   {item.isCurrentMonth && mappedEvents[item.day] && (
                     <div className="mt-2 space-y-1.5">
                       {mappedEvents[item.day].map((event, idx) => (
-                        <div key={idx} className={`text-[10px] px-2 py-1 rounded truncate font-semibold ${event.color}`} title={event.title}>
+                        <div key={idx} 
+                          onClick={() => handleOpenDetails(event)}
+                          className={`text-[10px] px-2 py-1 rounded truncate font-semibold cursor-pointer transition-transform hover:scale-[1.02] ${event.color}`} title={event.title}>
                           {event.title}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+      </div>
+    </div>
 
         <div className="col-span-1 xl:col-span-3">
           <div className="card">
@@ -249,6 +332,71 @@ const CourtCalendar = () => {
                 <button type="submit" className="btn-primary">Schedule Event</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* View Event Modal */}
+      {isViewModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="card p-8 w-full max-w-md shadow-2xl">
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <span className={`badge mb-2 ${selectedEvent.status === 'Done' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600 animate-blink'}`}>
+                  {selectedEvent.status || 'Pending'}
+                </span>
+                <h2 className="text-2xl font-bold text-apple-text tracking-tight">{selectedEvent.title}</h2>
+              </div>
+              <button 
+                onClick={() => setIsViewModalOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"
+              >
+                <Plus className="w-5 h-5 rotate-45" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 text-sm text-gray-600 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                <div className="p-2.5 bg-white rounded-xl shadow-sm border border-gray-100">
+                  <Clock className="w-5 h-5 text-primary-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-apple-text">{new Date(selectedEvent.start).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+                  <p className="text-gray-500">{new Date(selectedEvent.start).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+              </div>
+
+              {selectedEvent.location && (
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="font-bold uppercase tracking-widest text-[10px] text-gray-400">Location:</span>
+                  <span className="font-semibold">{selectedEvent.location}</span>
+                </div>
+              )}
+
+              {selectedEvent.description && (
+                <div className="space-y-2">
+                  <span className="font-bold uppercase tracking-widest text-[10px] text-gray-400">Description:</span>
+                  <p className="text-sm text-gray-600 leading-relaxed bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">{selectedEvent.description}</p>
+                </div>
+              )}
+
+              <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    className="w-5 h-5 rounded-lg border-gray-300 text-primary-600 focus:ring-primary-500 transition-all cursor-pointer"
+                    checked={selectedEvent.status === 'Done'}
+                    onChange={() => handleToggleDone(selectedEvent)}
+                  />
+                  <span className="text-sm font-bold text-gray-700 group-hover:text-primary-600 transition-colors">Mark as Done</span>
+                </label>
+                <button 
+                  onClick={() => setIsViewModalOpen(false)}
+                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold uppercase tracking-wider rounded-full transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

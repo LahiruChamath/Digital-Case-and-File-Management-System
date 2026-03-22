@@ -18,6 +18,16 @@ const documentSchema = new mongoose.Schema({
     type: String,
     required: true // e.g., 'pdf', 'docx'
   },
+  fileSize: {
+    type: Number,
+  },
+  publicId: {
+    type: String, // To store Cloudinary or S3 public identifier
+  },
+  storageType: {
+    type: String, // 'local' or 'cloudinary'
+    default: 'local'
+  },
   case: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Case',

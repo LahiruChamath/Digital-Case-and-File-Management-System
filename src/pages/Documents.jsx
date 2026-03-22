@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Upload, Filter, FileText, Calendar, MoreVertical, FolderOpen, HardDrive, Download } from 'lucide-react';
+import { Search, Upload, Filter, FileText, Calendar, MoreVertical, FolderOpen, HardDrive, Download, Trash2 } from 'lucide-react';
 import { documentService } from '../services/documentService';
 import { caseService } from '../services/caseService';
 import { useToast } from '../context/ToastContext';
@@ -14,6 +14,7 @@ const Documents = () => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({ title: '', caseId: '', file: null, format: 'Other' });
   const [uploading, setUploading] = useState(false);
+  const currentUser = JSON.parse(localStorage.getItem('user'));
 
   const fetchData = async (query = '') => {
     setLoading(true);
@@ -72,6 +73,19 @@ const Documents = () => {
     window.open(url, '_blank');
   };
 
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (window.confirm("Are you sure you want to delete this document? This cannot be undone.")) {
+      try {
+        await documentService.delete(id);
+        showToast('Document deleted successfully', 'success');
+        fetchData(searchTerm);
+      } catch (error) {
+        showToast(error.response?.data?.message || 'Failed to delete document', 'error');
+      }
+    }
+  };
+
   const filteredDocs = activeCategory === 'All' 
     ? documents 
     : documents.filter(d => activeCategory === 'PDFs' && d.format === 'pdf' 
@@ -94,10 +108,12 @@ const Documents = () => {
           <h1 className="text-3xl font-bold text-apple-text tracking-tight">Document Repository</h1>
           <p className="text-gray-500 mt-1.5 text-sm">Secure storage and retrieval for all firm documentation.</p>
         </div>
-        <button className="btn-primary" onClick={() => setIsUploadModalOpen(true)}>
-          <Upload className="w-4 h-4" />
-          Upload Document
-        </button>
+        {currentUser?.role === 'Senior Lawyer' && (
+          <button className="btn-primary" onClick={() => setIsUploadModalOpen(true)}>
+            <Upload className="w-4 h-4" />
+            Upload Document
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -194,7 +210,7 @@ const Documents = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {filteredDocs.map((doc) => (
-                    <tr key={doc._id} className="hover:bg-gray-50/50 transition-colors group cursor-pointer" onClick={() => handleDownload(doc.fileUrl)}>
+                    <tr key={doc._id} className="hover:bg-gray-50/50 transition-colors group">
                       <td className="py-4 px-6">
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-gray-50 group-hover:bg-white border border-gray-100 rounded-lg shadow-sm transition-colors">
@@ -218,9 +234,19 @@ const Documents = () => {
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleDownload(doc.fileUrl); }} 
                             className="p-2 text-gray-400 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                            title="Download Document"
                           >
                             <Download className="w-4 h-4" />
                           </button>
+                          {currentUser?.role === 'Senior Lawyer' && (
+                            <button 
+                              onClick={(e) => handleDelete(e, doc._id)} 
+                              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors ml-1"
+                              title="Delete Document"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -259,8 +285,11 @@ const Documents = () => {
               </div>
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">File</label>
-                <input type="file" required className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:transition-colors cursor-pointer"
+                <input type="file" required accept=".pdf,image/*,video/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 file:transition-colors cursor-pointer"
                   onChange={e => setUploadForm({...uploadForm, file: e.target.files[0]})} />
+                <p className="text-[11px] text-gray-400 font-medium mt-2">
+                  ℹ️ Only PDF, Image, and Video files are supported.
+                </p>
               </div>
               <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">
                 <button type="button" onClick={() => setIsUploadModalOpen(false)} className="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">Cancel</button>

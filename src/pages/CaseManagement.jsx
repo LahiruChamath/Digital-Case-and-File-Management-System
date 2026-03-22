@@ -5,6 +5,7 @@ import PriorityBadge from '../components/common/PriorityBadge';
 import Avatar from '../components/common/Avatar';
 import { caseService } from '../services/caseService';
 import { clientService } from '../services/clientService';
+import { authService } from '../services/authService';
 import { useToast } from '../context/ToastContext';
 
 // Defined at module level to prevent React from treating it as a new
@@ -91,13 +92,14 @@ const CaseManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
+  const [lawyers, setLawyers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [currentCase, setCurrentCase] = useState(null);
   const [newCaseForm, setNewCaseForm] = useState({
-    title: '', caseNumber: '', client: '', type: 'Litigation', court: '', priority: 'Medium'
+    title: '', caseNumber: '', client: '', type: 'Litigation', court: '', priority: 'Medium', assignedTo: []
   });
   const [filters, setFilters] = useState({
     status: '',
@@ -107,16 +109,18 @@ const CaseManagement = () => {
   const fetchCases = useCallback(async () => {
     setLoading(true);
     try {
-      const [casesData, clientsData] = await Promise.all([
+      const [casesData, clientsData, lawyersData] = await Promise.all([
         caseService.getAll({ 
           search: searchTerm,
           status: filters.status,
           type: filters.type
         }),
-        clientService.getAll()
+        clientService.getAll(),
+        authService.getLawyers()
       ]);
       setCases(casesData);
       setClients(clientsData);
+      setLawyers(lawyersData);
       if (clientsData.length > 0 && !newCaseForm.client) {
         setNewCaseForm(prev => ({...prev, client: clientsData[0]._id}));
       }
@@ -243,34 +247,53 @@ const CaseManagement = () => {
       {/* Add Case Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Open New Case</h2>
+          <div className="card p-6 sm:p-8 w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]">
+            <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4 flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary-500" /> New Case Entry
+            </h2>
             <form onSubmit={handleAddSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Case Title</label>
-                  <input type="text" required className="clean-input" placeholder="Smith vs Jones"
+                  <input type="text" required className="clean-input" placeholder="e.g. Divorce Proceeding"
                     value={newCaseForm.title} onChange={e => setNewCaseForm({...newCaseForm, title: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Case Number</label>
-                  <input type="text" disabled className="clean-input bg-gray-50 cursor-not-allowed font-mono text-gray-400" placeholder="CASE-00001 (Auto)"
-                    value={newCaseForm.caseNumber} />
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Client</label>
+                  <select required className="clean-input"
+                    value={newCaseForm.client} onChange={e => setNewCaseForm({...newCaseForm, client: e.target.value})}>
+                    <option value="" disabled>Select a client</option>
+                    {clients.map(c => (
+                      <option key={c._id} value={c._id}>{c.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               
               <div>
-                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Client</label>
-                <select required className="clean-input border-gray-200"
-                  value={newCaseForm.client} onChange={e => setNewCaseForm({...newCaseForm, client: e.target.value})}>
-                  <option value="" disabled>Select a client</option>
-                  {clients.map(c => (
-                    <option key={c._id} value={c._id}>{c.name}</option>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Assign Attorneys / Staff</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 border border-gray-100 rounded-xl bg-gray-50/30">
+                  {lawyers.map(lawyer => (
+                    <label key={lawyer._id} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        checked={newCaseForm.assignedTo.includes(lawyer._id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          const newList = checked 
+                            ? [...newCaseForm.assignedTo, lawyer._id]
+                            : newCaseForm.assignedTo.filter(id => id !== lawyer._id);
+                          setNewCaseForm({...newCaseForm, assignedTo: newList});
+                        }}
+                      />
+                      <span className="text-xs font-medium text-gray-700">{lawyer.name}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Practice Area</label>
                   <select className="clean-input border-gray-200"
@@ -310,10 +333,10 @@ const CaseManagement = () => {
       {/* Edit Case Modal */}
       {isEditModalOpen && currentCase && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="card p-6 sm:p-8 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Update Case Details</h2>
-            <form onSubmit={handleUpdateSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleUpdateSubmit} className="space-y-4 overflow-y-auto pr-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Case Title</label>
                   <input type="text" required className="clean-input"
@@ -325,8 +348,35 @@ const CaseManagement = () => {
                     value={currentCase.caseNumber} />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Assign Attorneys / Staff</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-3 border border-gray-100 rounded-xl bg-gray-50/30">
+                  {lawyers.map(lawyer => {
+                    const assignedList = Array.isArray(currentCase.assignedTo) 
+                      ? currentCase.assignedTo.map(u => typeof u === 'object' ? u._id : u)
+                      : [];
+                    return (
+                    <label key={lawyer._id} className="flex items-center gap-2 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        checked={assignedList.includes(lawyer._id)}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          const newList = checked 
+                            ? [...assignedList, lawyer._id]
+                            : assignedList.filter(id => id !== lawyer._id);
+                          setCurrentCase({...currentCase, assignedTo: newList});
+                        }}
+                      />
+                      <span className="text-xs font-medium text-gray-700">{lawyer.name}</span>
+                    </label>
+                  )})}
+                </div>
+              </div>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Practice Area</label>
                   <select className="clean-input border-gray-200"
@@ -363,6 +413,40 @@ const CaseManagement = () => {
                   <option value="Closed">Closed</option>
                   <option value="Archived">Archived</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Notes & Internal Updates</label>
+                <div className="space-y-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 max-h-40 overflow-y-auto">
+                   {currentCase.notes?.map((note, idx) => (
+                     <div key={idx} className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm">
+                       <p className="text-xs text-apple-text whitespace-pre-wrap">{note.content}</p>
+                       <p className="text-[9px] text-gray-400 mt-1 uppercase font-bold tracking-widest">
+                         By {note.author?.name || 'System'} • {new Date(note.createdAt).toLocaleDateString()}
+                       </p>
+                     </div>
+                   ))}
+                   <div className="flex gap-2">
+                     <input 
+                       type="text" 
+                       placeholder="Add a quick note..."
+                       className="clean-input text-xs"
+                       onKeyDown={(e) => {
+                         if (e.key === 'Enter') {
+                           e.preventDefault();
+                           const val = e.target.value;
+                           if (val.trim()) {
+                             setCurrentCase({
+                               ...currentCase,
+                               notes: [...(currentCase.notes || []), { content: val, author: { name: 'You' }, createdAt: new Date() }]
+                             });
+                             e.target.value = '';
+                           }
+                         }
+                       }}
+                     />
+                   </div>
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">

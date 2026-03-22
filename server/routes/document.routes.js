@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const { protect } = require('../middleware/auth.middleware');
-const { uploadDocument, updateVersion, searchDocuments } = require('../controllers/document.controller');
+const { protect, authorize } = require('../middleware/auth.middleware');
+const { uploadDocument, updateVersion, searchDocuments, deleteDocument } = require('../controllers/document.controller');
 
 // Multer setup for local temp storage before Cloudinary upload
 const upload = multer({ dest: 'uploads/' });
 
 router.use(protect); // Protect all document routes
 
-router.post('/upload', upload.single('file'), uploadDocument);
-router.put('/:id/version', upload.single('file'), updateVersion);
+router.post('/upload', authorize('Senior Lawyer'), upload.single('file'), uploadDocument);
+router.put('/:id/version', authorize('Senior Lawyer', 'Junior Lawyer'), upload.single('file'), updateVersion);
 router.get('/search', searchDocuments);
+router.delete('/:id', authorize('Senior Lawyer'), deleteDocument);
 
 module.exports = router;

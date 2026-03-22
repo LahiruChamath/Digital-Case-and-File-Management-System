@@ -11,6 +11,11 @@ const eventSchema = new mongoose.Schema({
     enum: ['Court Date', 'Meeting', 'Deadline', 'Other'],
     default: 'Court Date'
   },
+  status: {
+    type: String,
+    enum: ['Pending', 'Done'],
+    default: 'Pending'
+  },
   case: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Case',

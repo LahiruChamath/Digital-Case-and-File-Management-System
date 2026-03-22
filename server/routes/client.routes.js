@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth.middleware');
+const { protect, authorize } = require('../middleware/auth.middleware');
 const { registerClient, getClients, updateClient, deleteClient, addCommunicationLog } = require('../controllers/client.controller');
 const { clientValidation } = require('../middleware/validation.middleware');
 
 router.use(protect);
 
-router.post('/', clientValidation, registerClient);
+router.post('/', authorize('Senior Lawyer'), clientValidation, registerClient);
 router.get('/', getClients);
-router.put('/:id', clientValidation, updateClient);
-router.delete('/:id', deleteClient);
+router.put('/:id', authorize('Senior Lawyer', 'Junior Lawyer'), clientValidation, updateClient);
+router.delete('/:id', authorize('Senior Lawyer'), deleteClient);
 router.post('/:id/communication', addCommunicationLog);
 
 module.exports = router;

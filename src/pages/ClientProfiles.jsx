@@ -201,7 +201,7 @@ const ClientProfiles = () => {
       {/* Log Communication Modal */}
       {isLogModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="card p-6 sm:p-8 w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">
               Log Communication<br/>
               <span className="text-primary-600 text-sm font-bold mt-1 inline-block">{selectedClient?.name}</span>
@@ -242,7 +242,7 @@ const ClientProfiles = () => {
       {/* Add Client Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="card p-6 sm:p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Add New Client</h2>
             <form onSubmit={handleAddSubmit} className="space-y-4">
               <div>
@@ -259,7 +259,7 @@ const ClientProfiles = () => {
                   value={newClientForm.email} onChange={e => setNewClientForm({...newClientForm, email: e.target.value})}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Phone</label>
                   <input 
@@ -290,7 +290,7 @@ const ClientProfiles = () => {
       {/* Edit Client Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="card p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+          <div className="card p-6 sm:p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Update Client Profile</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
@@ -307,7 +307,7 @@ const ClientProfiles = () => {
                   value={editClientForm.email} onChange={e => setEditClientForm({...editClientForm, email: e.target.value})}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Phone</label>
                   <input 

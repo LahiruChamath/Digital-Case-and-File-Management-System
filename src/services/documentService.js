@@ -33,5 +33,10 @@ export const documentService = {
       },
     });
     return data;
+  },
+
+  delete: async (id) => {
+    const { data } = await api.delete(`/documents/${id}`);
+    return data;
   }
 };

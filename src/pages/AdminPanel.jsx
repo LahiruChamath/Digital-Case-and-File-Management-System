@@ -166,22 +166,22 @@ const AdminPanel = () => {
   }, [activeTab]);
 
   return (
-    <div className="space-y-6 flex flex-col items-stretch h-[calc(100vh-theme(spacing.24))] animate-in fade-in duration-500">
+    <div className="space-y-6 flex flex-col items-stretch animate-in fade-in duration-500">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-apple-text tracking-tight">Admin Control Panel</h1>
         <p className="text-gray-500 mt-1.5 text-sm">Manage firm users, roles, security settings, and audit logs.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-        {/* Sidebar Tabs */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        {/* Navigation Tabs - Responsive: Horizontal on mobile, vertical on desktop */}
         <div className="col-span-1 lg:col-span-3">
-          <div className="card p-4 space-y-1 h-full">
+          <div className="card p-2 lg:p-4 flex lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar space-x-2 lg:space-x-0 lg:space-y-1">
             {adminTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-primary-50 text-primary-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-apple-text'
@@ -197,10 +197,10 @@ const AdminPanel = () => {
         </div>
 
         {/* Content Area */}
-        <div className="col-span-1 lg:col-span-9 card overflow-hidden w-full h-full relative flex flex-col">
+        <div className="col-span-1 lg:col-span-9 card overflow-hidden w-full relative flex flex-col min-h-[400px]">
           {activeTab === 'users' && (
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-gray-100 bg-white gap-4">
                 <h2 className="text-lg font-semibold text-apple-text">Firm Personnel</h2>
                 <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
                   <UserPlus className="w-4 h-4" />
@@ -543,8 +543,8 @@ const AdminPanel = () => {
           {/* Add User Modal */}
           {activeTab === 'users' && isAddModalOpen && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="card p-8 w-full max-w-md shadow-2xl">
-                <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Add New Personnel</h2>
+              <div className="card p-6 sm:p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
+                <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Add New Personnel</h2>
                 <form onSubmit={handleAddSubmit} className="space-y-4">
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Full Name</label>

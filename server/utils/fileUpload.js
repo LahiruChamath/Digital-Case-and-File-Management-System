@@ -6,7 +6,7 @@ const useCloudinary = process.env.USE_CLOUDINARY === 'true';
 
 const uploadFile = async (file) => {
   if (useCloudinary) {
-    const result = await uploadToCloudinary(file.path);
+    const result = await uploadToCloudinary(file.path, file.originalname);
     fs.unlink(file.path, (err) => { if (err) console.error('Failed to delete temp file:', err); });
     return { filename: file.originalname, url: result.url, publicId: result.publicId, size: result.size, format: result.format, storage: 'cloudinary' };
   } else {

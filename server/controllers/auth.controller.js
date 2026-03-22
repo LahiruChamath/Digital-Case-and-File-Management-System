@@ -96,3 +96,15 @@ exports.requestAccess = async (req, res) => {
     res.status(500).json({ message: 'Failed to submit request', error: error.message });
   }
 };
+
+// @desc    Get all lawyers/staff for assignment
+// @route   GET /api/auth/lawyers
+// @access  Private
+exports.getLawyers = async (req, res) => {
+  try {
+    const lawyers = await User.find({ isActive: true }).select('name role _id').sort('name');
+    res.json(lawyers);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch staff list', error: error.message });
+  }
+};

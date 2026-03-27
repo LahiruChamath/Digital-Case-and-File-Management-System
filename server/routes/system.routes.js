@@ -5,10 +5,9 @@ const { protect, authorize } = require('../middleware/auth.middleware');
 
 router.use(protect);
 
-// router.get('/settings', authorize('admin'), systemController.getSettings);
-// router.put('/settings', authorize('admin'), systemController.updateSettings);
-// router.get('/audit-logs', authorize('admin'), systemController.getAuditLogs);
-// router.get('/audit-logs/export', authorize('admin'), systemController.exportAuditLogs);
+router.get('/settings', authorize('Senior Lawyer'), systemController.getSettings);
+router.put('/settings', authorize('Senior Lawyer'), systemController.updateSettings);
+router.get('/audit-logs', authorize('Senior Lawyer'), systemController.getAuditLogs);
 router.get('/health', systemController.getSystemHealth);
 router.get('/stats', systemController.getSystemStats);
 

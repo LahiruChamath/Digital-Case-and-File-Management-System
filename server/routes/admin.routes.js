@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth.middleware');
+const { autoAudit } = require('../middleware/audit.middleware');
 const { getAllUsers, toggleUserStatus, createUser, updateUserRole, deleteUser, getAccessRequests, approveAccessRequest, rejectAccessRequest } = require('../controllers/admin.controller');
 const { createCase, getCases, updateCase, updateCaseStatus, closeCase, addCaseNote } = require('../controllers/case.controller');
 const { getSystemHealth } = require('../controllers/system.controller');
@@ -18,6 +19,7 @@ const admin = (req, res, next) => {
 
 router.use(protect);
 router.use(admin);
+router.use(autoAudit);
 
 router.get('/users', getAllUsers);
 router.post('/users', createUser);

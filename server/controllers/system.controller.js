@@ -4,6 +4,8 @@ const Case = require('../models/Case');
 const Document = require('../models/Document');
 const Invoice = require('../models/Invoice');
 const Expense = require('../models/Expense');
+const AuditLog = require('../models/AuditLog');
+const SystemSettings = require('../models/SystemSettings');
 
 // @desc    Get system health & statistics
 // @route   GET /api/admin/system/health
@@ -130,5 +132,81 @@ exports.getSystemStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch system stats', error: error.message });
+  }
+};
+
+// @desc    Get system audit logs
+// @route   GET /api/system/audit-logs
+// @access  Private/Admin
+exports.getAuditLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, action, user } = req.query;
+    const query = {};
+    if (action) query.action = action;
+    if (user) query.user = user;
+
+    const logs = await AuditLog.find(query)
+      .populate('user', 'name email')
+      .sort({ timestamp: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const count = await AuditLog.countDocuments(query);
+
+    res.json({
+      logs,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      totalLogs: count
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch audit logs', error: error.message });
+  }
+};
+
+// @desc    Get system settings
+// @route   GET /api/system/settings
+// @access  Private/Admin
+exports.getSettings = async (req, res) => {
+  try {
+    let settings = await SystemSettings.find({});
+    
+    // If no settings exist yet, seed defaults
+    if (settings.length === 0) {
+      const defaults = SystemSettings.getDefaults();
+      settings = await SystemSettings.insertMany(defaults);
+    }
+
+    // Transform into a key-value object for easier frontend use
+    const settingsObj = {};
+    settings.forEach(s => {
+      settingsObj[s.key] = s.value;
+    });
+
+    res.json(settingsObj);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch settings', error: error.message });
+  }
+};
+
+// @desc    Update system settings
+// @route   PUT /api/system/settings
+// @access  Private/Admin
+exports.updateSettings = async (req, res) => {
+  try {
+    const updates = req.body; // Expects an object { key: value, ... }
+    
+    const updatePromises = Object.keys(updates).map(key => {
+      return SystemSettings.findOneAndUpdate(
+        { key },
+        { value: updates[key], updatedBy: req.user._id },
+        { new: true, upsert: true }
+      );
+    });
+
+    await Promise.all(updatePromises);
+    res.json({ message: 'Settings updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update settings', error: error.message });
   }
 };

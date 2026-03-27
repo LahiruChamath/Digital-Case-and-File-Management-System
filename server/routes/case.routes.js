@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth.middleware');
+const { autoAudit } = require('../middleware/audit.middleware');
 const { createCase, getCases, updateCase, updateCaseStatus, closeCase, addCaseNote, deleteCase } = require('../controllers/case.controller');
 const { caseValidation } = require('../middleware/validation.middleware');
 
 router.use(protect);
+router.use(autoAudit);
 
 router.post('/', authorize('Senior Lawyer'), caseValidation, createCase);
 router.get('/', getCases);

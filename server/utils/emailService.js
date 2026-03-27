@@ -39,4 +39,26 @@ const sendInvoiceEmail = async (client, invoice) => {
   }
 };
 
-module.exports = { sendReminderNotification, sendWelcomeEmail, sendInvoiceEmail };
+const sendPasswordResetEmail = async (user, resetUrl) => {
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset Request',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #1a365d;">Password Reset Request</h2>
+          <p>You are receiving this email because you (or someone else) have requested the reset of the password for your account.</p>
+          <p>Please click on the following link, or paste this into your browser to complete the process within 10 minutes of receiving it:</p>
+          <a href="${resetUrl}" style="background-color: #2b6cb0; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin: 20px 0;">Reset Password</a>
+          <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 0.8em; color: #777;">This is an automated message, please do not reply.</p>
+        </div>
+      `,
+    });
+  } catch (error) {
+    console.error(`Failed to send password reset email to ${user.email}:`, error.message);
+  }
+};
+
+module.exports = { sendReminderNotification, sendWelcomeEmail, sendInvoiceEmail, sendPasswordResetEmail };

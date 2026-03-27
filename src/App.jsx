@@ -9,6 +9,8 @@ import CourtCalendar from './pages/CourtCalendar';
 import Documents from './pages/Documents';
 import ExpensesBilling from './pages/ExpensesBilling';
 import AdminPanel from './pages/AdminPanel';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 import ProtectedRoute from './components/common/ProtectedRoute';
 
@@ -22,6 +24,8 @@ function App() {
       <Router>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
           
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>

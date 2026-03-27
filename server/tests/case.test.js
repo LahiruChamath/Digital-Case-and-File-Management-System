@@ -22,7 +22,7 @@ describe('Case API', () => {
       name: 'Admin User',
       email: 'admin@example.com',
       password: 'password123',
-      role: 'Attorney'
+      role: 'Senior Lawyer'
     });
     token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret');
 

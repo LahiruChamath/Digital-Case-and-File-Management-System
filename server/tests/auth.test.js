@@ -14,7 +14,7 @@ describe('Auth API', () => {
     name: 'Test User',
     email: 'test@example.com',
     password: 'password123',
-    role: 'Attorney'
+    role: 'Senior Lawyer'
   };
 
   it('should register a new user successfully', async () => {

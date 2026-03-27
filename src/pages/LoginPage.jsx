@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Scale, AlertCircle, ShieldCheck, X, UserPlus, FileText, Check, Settings, Briefcase, Users as UsersIcon, HardDrive } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const PermissionTable = ({ onClose }) => {
   const permissionCategories = [
@@ -142,8 +143,6 @@ const PermissionTable = ({ onClose }) => {
   );
 };
 
-import api from '../services/api';
-
 const RequestAccessModal = ({ onClose }) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -277,11 +276,23 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+      setFormData(prev => ({ ...prev, email: rememberedEmail, remember: true }));
+    }
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsSubmitting(true);
     try {
+      if (formData.remember) {
+        localStorage.setItem('rememberedEmail', formData.email);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+      }
       await login(formData.email, formData.password);
       navigate('/dashboard');
     } catch (err) {
@@ -334,9 +345,12 @@ const LoginPage = () => {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500">Password</label>
-                <button type="button" className="text-[11px] text-primary-500 hover:text-primary-600 font-bold tracking-wide transition-colors">
+                <Link 
+                  to="/forgot-password" 
+                  className="text-[11px] text-primary-500 hover:text-primary-600 font-bold tracking-wide transition-colors"
+                >
                   Forgot Password?
-                </button>
+                </Link>
               </div>
               <div className="relative group">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />

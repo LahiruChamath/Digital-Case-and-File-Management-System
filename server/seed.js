@@ -17,8 +17,8 @@ const seedAdmin = async () => {
     const admin = await User.create({
       name: 'System Administrator',
       email: 'admin@lawfirm.com',
-      password: 'adminpassword123', // Will be hashed by pre-save hook
-      role: 'Admin'
+      password: 'Admin@1234', // Changed to match user preference
+      role: 'Senior Lawyer'
     });
 
     console.log('Admin user created successfully:', admin.email);

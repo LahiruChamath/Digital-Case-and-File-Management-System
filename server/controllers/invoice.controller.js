@@ -92,7 +92,7 @@ exports.generateInvoice = async (req, res) => {
         .font('Helvetica')
         .text(expense.title, 60, y)
         .text(expense.category, 300, y)
-        .text(`$${expense.amount.toFixed(2)}`, 480, y, { align: 'right' });
+        .text(`LKR ${expense.amount.toLocaleString()}`, 480, y, { align: 'right' });
       y += 20;
     });
 
@@ -102,7 +102,7 @@ exports.generateInvoice = async (req, res) => {
       .fontSize(12)
       .font('Helvetica-Bold')
       .text('TOTAL DUE:', 400, y + 25)
-      .text(`$${total.toFixed(2)}`, 480, y + 25, { align: 'right' });
+      .text(`LKR ${total.toLocaleString()}`, 480, y + 25, { align: 'right' });
 
     // Footer
     doc
@@ -125,5 +125,23 @@ exports.getAllInvoices = async (req, res) => {
     res.json(invoices);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch invoices', error: error.message });
+  }
+};
+
+// @desc    Update invoice status
+// @route   PUT /api/invoices/:id/status
+// @access  Private
+exports.updateInvoiceStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const updateData = { status };
+    if (status === 'paid') {
+      updateData.paidDate = Date.now();
+    }
+    const invoice = await Invoice.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
+    if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+    res.json(invoice);
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update invoice', error: error.message });
   }
 };

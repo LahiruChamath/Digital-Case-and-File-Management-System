@@ -17,9 +17,9 @@ import { useToast } from '../context/ToastContext';
 
 const adminTabs = [
   { id: 'users', label: 'User Management', icon: Users },
+  { id: 'requests', label: 'Access Requests', icon: UserPlus },
   { id: 'health', label: 'System Health', icon: Activity },
   { id: 'backups', label: 'Backup & Restore', icon: Database },
-  { id: 'roles', label: 'Roles & Permissions', icon: Shield },
   { id: 'audit', label: 'Audit Logs', icon: FileText },
   { id: 'settings', label: 'System Settings', icon: Settings },
 ];
@@ -28,12 +28,15 @@ const AdminPanel = () => {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
+  const [requests, setRequests] = useState([]);
   const [health, setHealth] = useState(null);
   const [backups, setBackups] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newUserForm, setNewUserForm] = useState({
-    name: '', email: '', password: '', role: 'Legal Staff'
+    name: '', email: '', password: '', role: 'Junior Lawyer'
   });
 
   const fetchUsers = async () => {
@@ -72,6 +75,19 @@ const AdminPanel = () => {
     }
   };
 
+  const fetchRequests = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getAccessRequests();
+      setRequests(data);
+    } catch (error) {
+      console.error('Failed to fetch requests', error);
+      showToast('Failed to load access requests', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBackup = async () => {
     try {
       await adminService.triggerBackup();
@@ -105,7 +121,7 @@ const AdminPanel = () => {
     try {
       await adminService.createUser(newUserForm);
       setIsAddModalOpen(false);
-      setNewUserForm({ name: '', email: '', password: '', role: 'Legal Staff' });
+      setNewUserForm({ name: '', email: '', password: '', role: 'Junior Lawyer' });
       fetchUsers();
       showToast('User successfully added!', 'success');
     } catch (error) {
@@ -113,29 +129,102 @@ const AdminPanel = () => {
     }
   };
 
+  const handleApproveRequest = async (requestId) => {
+    try {
+      const res = await adminService.approveAccessRequest(requestId);
+      showToast(`Request approved! Temp Password: ${res.tempPassword}`, 'success', 10000);
+      fetchRequests();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to approve request', 'error');
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      await adminService.rejectAccessRequest(requestId);
+      showToast('Request rejected', 'info');
+      fetchRequests();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to reject request', 'error');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')) return;
+    try {
+      await adminService.deleteUser(userId);
+      setUsers(users.filter(u => u._id !== userId));
+      showToast('User deleted successfully', 'success');
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to delete user', 'error');
+    }
+  };
+
+  const fetchAuditLogs = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getAuditLogs();
+      setAuditLogs(data.logs);
+    } catch (error) {
+      console.error('Failed to fetch audit logs', error);
+      showToast('Failed to load audit logs', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getSettings();
+      setSettings(data);
+    } catch (error) {
+      console.error('Failed to fetch settings', error);
+      showToast('Failed to load system settings', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSettingsSave = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await adminService.updateSettings(settings);
+      showToast('Settings updated successfully', 'success');
+    } catch (error) {
+      showToast('Failed to update settings', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
+    if (activeTab === 'requests') fetchRequests();
     if (activeTab === 'health') fetchHealth();
     if (activeTab === 'backups') fetchBackups();
+    if (activeTab === 'audit') fetchAuditLogs();
+    if (activeTab === 'settings') fetchSettings();
   }, [activeTab]);
 
   return (
-    <div className="space-y-6 flex flex-col items-stretch h-[calc(100vh-theme(spacing.24))] animate-in fade-in duration-500">
+    <div className="space-y-6 flex flex-col items-stretch animate-in fade-in duration-500">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-apple-text tracking-tight">Admin Control Panel</h1>
         <p className="text-gray-500 mt-1.5 text-sm">Manage firm users, roles, security settings, and audit logs.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-0">
-        {/* Sidebar Tabs */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+        {/* Navigation Tabs - Responsive: Horizontal on mobile, vertical on desktop */}
         <div className="col-span-1 lg:col-span-3">
-          <div className="card p-4 space-y-1 h-full">
+          <div className="card p-2 lg:p-4 flex lg:flex-col overflow-x-auto lg:overflow-visible no-scrollbar space-x-2 lg:space-x-0 lg:space-y-1">
             {adminTabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group ${
+                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all group whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-primary-50 text-primary-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-apple-text'
@@ -151,10 +240,10 @@ const AdminPanel = () => {
         </div>
 
         {/* Content Area */}
-        <div className="col-span-1 lg:col-span-9 card overflow-hidden w-full h-full relative flex flex-col">
+        <div className="col-span-1 lg:col-span-9 card overflow-hidden w-full relative flex flex-col min-h-[400px]">
           {activeTab === 'users' && (
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border-b border-gray-100 bg-white gap-4">
                 <h2 className="text-lg font-semibold text-apple-text">Firm Personnel</h2>
                 <button className="btn-primary" onClick={() => setIsAddModalOpen(true)}>
                   <UserPlus className="w-4 h-4" />
@@ -191,9 +280,9 @@ const AdminPanel = () => {
                             onChange={(e) => handleRoleChange(user._id, e.target.value)}
                             className="bg-gray-100 border border-gray-200 text-[10px] font-bold uppercase tracking-widest text-gray-600 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-primary-500/20 transition-all cursor-pointer hover:bg-gray-200"
                           >
-                            <option value="Admin">Admin</option>
-                            <option value="Attorney">Attorney</option>
-                            <option value="Legal Staff">Legal Staff</option>
+                            <option value="Senior Lawyer">Senior Lawyer</option>
+                            <option value="Junior Lawyer">Junior Lawyer</option>
+                            <option value="Apprentice Lawyer">Apprentice Lawyer</option>
                           </select>
                         </td>
                         <td className="py-4 px-6">
@@ -224,13 +313,108 @@ const AdminPanel = () => {
                             >
                               {user.isActive ? 'Deactivate' : 'Activate'}
                             </button>
-                            <button className="p-2 text-gray-400 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">
+                            <button 
+                              onClick={() => handleDeleteUser(user._id)}
+                              className="p-2 text-gray-400 hover:text-status-overdue hover:bg-status-overdue/10 rounded-lg transition-colors"
+                              title="Delete User"
+                            >
                               <MoreVertical className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'requests' && (
+            <div className="flex flex-col h-full animate-in fade-in duration-500">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
+                <div>
+                  <h2 className="text-lg font-semibold text-apple-text">Access Requests</h2>
+                  <p className="text-xs text-gray-500 mt-1">Review and approve new personnel onboarding requests.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                    {requests.filter(r => r.status === 'pending').length} Pending
+                  </span>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto overflow-y-auto flex-1 bg-white">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10">
+                      <th className="table-header py-4 px-6">Requester</th>
+                      <th className="table-header py-4 px-6">Requested Role</th>
+                      <th className="table-header py-4 px-6">Purpose/Reason</th>
+                      <th className="table-header py-4 px-6">Status</th>
+                      <th className="table-header py-4 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {requests.map((request) => (
+                      <tr key={request._id} className="hover:bg-gray-50/30 transition-colors group">
+                        <td className="py-4 px-6">
+                          <div>
+                            <p className="text-sm font-semibold text-apple-text tracking-wide">{request.fullName}</p>
+                            <p className="text-[11px] font-medium text-gray-400 mt-0.5">{request.email}</p>
+                            <p className="text-[10px] text-gray-400 mt-1 font-medium">{new Date(request.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+                            {request.role}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          <p className="text-xs text-gray-500 max-w-xs line-clamp-2 italic">"{request.reason}"</p>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            request.status === 'pending' ? 'bg-status-pending/10 text-status-pending' :
+                            request.status === 'approved' ? 'bg-status-active/10 text-status-active' :
+                            'bg-status-overdue/10 text-status-overdue'
+                          }`}>
+                            {request.status}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                          {request.status === 'pending' ? (
+                            <div className="flex justify-end items-center gap-2">
+                              <button 
+                                onClick={() => handleApproveRequest(request._id)}
+                                className="p-2 text-status-active hover:bg-status-active/10 rounded-lg transition-colors flex items-center gap-1.5"
+                                title="Approve & Create User"
+                              >
+                                <CheckCircle className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Approve</span>
+                              </button>
+                              <button 
+                                onClick={() => handleRejectRequest(request._id)}
+                                className="p-2 text-status-overdue hover:bg-status-overdue/10 rounded-lg transition-colors flex items-center gap-1.5"
+                                title="Reject Request"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Reject</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex justify-end text-[10px] font-bold text-gray-400 uppercase tracking-widest italic pr-4">
+                              Processed
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {requests.length === 0 && !loading && (
+                      <tr>
+                        <td colSpan="5" className="py-16 text-center text-sm font-medium text-gray-400 italic">No access requests found.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -353,7 +537,7 @@ const AdminPanel = () => {
                       <tbody className="divide-y divide-gray-100">
                         {backups.map((b) => (
                           <tr key={b._id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-4 px-6 text-sm font-semibold text-apple-text">{b.filename}</td>
+                            <td className="py-4 px-6 text-sm font-semibold text-apple-text">{b.name}</td>
                             <td className="py-4 px-6 text-sm text-gray-500 font-medium">{(b.size / 1024).toFixed(2)} <span className="text-[10px] uppercase font-bold ml-0.5">KB</span></td>
                             <td className="py-4 px-6">
                               <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-2 py-1 rounded-md">{b.triggeredBy?.name || 'System'}</span>
@@ -377,24 +561,163 @@ const AdminPanel = () => {
             </div>
           )}
 
-          {(activeTab === 'roles' || activeTab === 'audit' || activeTab === 'settings') && (
+          {activeTab === 'audit' && (
+            <div className="flex flex-col h-full animate-in fade-in duration-500">
+              <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-white">
+                <div>
+                  <h2 className="text-lg font-semibold text-apple-text">System Activity Logs</h2>
+                  <p className="text-xs text-gray-500 mt-1">Audit trail of all administrative and system-wide actions.</p>
+                </div>
+                <button onClick={fetchAuditLogs} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                   <Activity className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
+
+              <div className="overflow-x-auto overflow-y-auto flex-1 bg-white">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-gray-100 bg-gray-50/50 sticky top-0 z-10">
+                      <th className="table-header py-4 px-6">Timestamp</th>
+                      <th className="table-header py-4 px-6">Personnel</th>
+                      <th className="table-header py-4 px-6">Action</th>
+                      <th className="table-header py-4 px-6">Resource</th>
+                      <th className="table-header py-4 px-6">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 text-xs">
+                    {auditLogs.map((log) => (
+                      <tr key={log._id} className="hover:bg-gray-50/30 transition-colors">
+                        <td className="py-4 px-6 font-medium text-gray-500">
+                          {new Date(log.timestamp).toLocaleString()}
+                        </td>
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-apple-text">{log.userName || 'System'}</span>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-tighter">{log.user?.role || ''}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <span className={`px-2 py-1 rounded font-bold uppercase tracking-wider text-[10px] ${
+                            log.action === 'DELETE' ? 'bg-red-50 text-red-600' :
+                            log.action === 'CREATE' ? 'bg-green-50 text-green-600' :
+                            log.action === 'UPDATE' ? 'bg-blue-50 text-blue-600' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-4 px-6">
+                           <div className="flex flex-col">
+                             <span className="font-bold text-gray-700 capitalize">{log.resourceType || '-'}</span>
+                             <span className="text-[10px] font-mono text-gray-400">{log.resourceId?.substring(0, 12)}...</span>
+                           </div>
+                        </td>
+                        <td className="py-4 px-6">
+                           <div className="max-w-xs overflow-hidden text-ellipsis whitespace-nowrap text-gray-500 italic" title={JSON.stringify(log.details)}>
+                             {log.details?.path || JSON.stringify(log.details)}
+                           </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {auditLogs.length === 0 && !loading && (
+                      <tr>
+                        <td colSpan="5" className="py-16 text-center text-sm font-medium text-gray-400 italic">No activity logs recorded yet.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'settings' && settings && (
+            <div className="flex flex-col h-full animate-in fade-in duration-500">
+               <div className="p-6 border-b border-gray-100 bg-white">
+                 <h2 className="text-lg font-semibold text-apple-text">System Configuration</h2>
+                 <p className="text-xs text-gray-500 mt-1">Manage global firm settings, notification preferences, and billing defaults.</p>
+               </div>
+
+               <div className="flex-1 overflow-y-auto p-6 bg-white">
+                 <form onSubmit={handleSettingsSave} className="max-w-4xl space-y-8">
+                   {/* General Settings */}
+                   <section>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-primary-600 mb-4 flex items-center gap-2">
+                        <Settings className="w-3.5 h-3.5" /> General Information
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Law Firm Name</label>
+                          <input 
+                            type="text" 
+                            className="clean-input" 
+                            value={settings.firm_name}
+                            onChange={(e) => setSettings({...settings, firm_name: e.target.value})}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Contact Phone</label>
+                          <input 
+                            type="text" 
+                            className="clean-input" 
+                            value={settings.firm_phone}
+                            onChange={(e) => setSettings({...settings, firm_phone: e.target.value})}
+                          />
+                        </div>
+                        <div className="col-span-full space-y-2">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Office Address</label>
+                          <textarea 
+                            rows={2}
+                            className="clean-input py-3" 
+                            value={settings.firm_address}
+                            onChange={(e) => setSettings({...settings, firm_address: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                   </section>
+
+                   {/* Notification Settings */}
+                   <section className="pt-8 border-t border-gray-100">
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-primary-600 mb-4 flex items-center gap-2">
+                        <Activity className="w-3.5 h-3.5" /> Notifications & Reminders
+                      </h3>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                          <div>
+                            <p className="text-sm font-semibold text-apple-text">Enable Email Notifications</p>
+                            <p className="text-xs text-gray-500">Send automated emails for case creation and court reminders.</p>
+                          </div>
+                          <div 
+                            className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${settings.enable_email_notifications ? 'bg-primary-500' : 'bg-gray-300'}`}
+                            onClick={() => setSettings({...settings, enable_email_notifications: !settings.enable_email_notifications})}
+                          >
+                            <div className={`w-4 h-4 bg-white rounded-full transition-transform ${settings.enable_email_notifications ? 'translate-x-6' : 'translate-x-0'}`} />
+                          </div>
+                        </div>
+                      </div>
+                   </section>
+
+                   <div className="pt-10 border-t border-gray-100 flex justify-end">
+                      <button 
+                        type="submit" 
+                        disabled={loading}
+                        className="btn-primary"
+                      >
+                        {loading ? 'Saving...' : 'Save Configuration'}
+                      </button>
+                   </div>
+                 </form>
+               </div>
+            </div>
+          )}
+
+          {activeTab === 'roles' && (
             <div className="absolute inset-0 flex items-center justify-center p-6 bg-gray-50/50">
               <div className="text-center p-10 bg-white rounded-3xl border border-gray-100 shadow-apple max-w-sm w-full">
                 <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
-                   {activeTab === 'roles' && <Shield className="w-10 h-10 text-gray-400" />}
-                   {activeTab === 'audit' && <FileText className="w-10 h-10 text-gray-400" />}
-                   {activeTab === 'settings' && <Settings className="w-10 h-10 text-gray-400" />}
+                   <Shield className="w-10 h-10 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-bold text-apple-text mb-2 tracking-tight">
-                  {activeTab === 'roles' && 'Roles & Permissions'}
-                  {activeTab === 'audit' && 'Audit Logs'}
-                  {activeTab === 'settings' && 'System Settings'}
-                </h3>
-                <p className="text-sm text-gray-500 mb-8">
-                  {activeTab === 'roles' && 'Configure role-based access control.'}
-                  {activeTab === 'audit' && 'View system activity logs.'}
-                  {activeTab === 'settings' && 'Configure system preferences.'}
-                </p>
+                <h3 className="text-xl font-bold text-apple-text mb-2 tracking-tight">Roles & Permissions</h3>
+                <p className="text-sm text-gray-500 mb-8">Configure role-based access control.</p>
                 <div className="inline-block px-4 py-1.5 rounded-full bg-gray-100 text-[10px] font-bold uppercase tracking-widest text-gray-500">Module Upcoming</div>
               </div>
             </div>
@@ -402,8 +725,8 @@ const AdminPanel = () => {
           {/* Add User Modal */}
           {activeTab === 'users' && isAddModalOpen && (
             <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="card p-8 w-full max-w-md shadow-2xl">
-                <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight">Add New Personnel</h2>
+              <div className="card p-6 sm:p-8 w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
+                <h2 className="text-xl font-bold mb-6 text-apple-text tracking-tight border-b border-gray-100 pb-4">Add New Personnel</h2>
                 <form onSubmit={handleAddSubmit} className="space-y-4">
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Full Name</label>
@@ -423,9 +746,9 @@ const AdminPanel = () => {
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">System Role</label>
                     <select className="clean-input" value={newUserForm.role} onChange={e => setNewUserForm({...newUserForm, role: e.target.value})}>
-                      <option value="Admin">Admin</option>
-                      <option value="Attorney">Attorney</option>
-                      <option value="Legal Staff">Legal Staff</option>
+                      <option value="Senior Lawyer">Senior Lawyer</option>
+                      <option value="Junior Lawyer">Junior Lawyer</option>
+                      <option value="Apprentice Lawyer">Apprentice Lawyer</option>
                     </select>
                   </div>
                   <div className="flex justify-end gap-3 pt-6 mt-2 border-t border-gray-100">

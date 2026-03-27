@@ -1,8 +1,12 @@
 const mongoose = require('mongoose');
 
 const backupSchema = new mongoose.Schema({
-  filename: {
+  name: {
     type: String,
+    required: true
+  },
+  data: {
+    type: Object,
     required: true
   },
   size: {

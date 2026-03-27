@@ -4,19 +4,23 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
 });
 
-const uploadToCloudinary = async (filePath, folder = 'legal-documents') => {
+const uploadToCloudinary = async (filePath, originalName = '') => {
   try {
     const result = await cloudinary.uploader.upload(filePath, {
-      folder,
+      folder: 'legal-documents',
       resource_type: 'auto',
-      allowed_formats: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'xlsx', 'xls'],
+      type: 'upload',
+      access_mode: 'public',
+      use_filename: true,
+      unique_filename: true
     });
     return {
       url: result.secure_url,
       publicId: result.public_id,
-      format: result.format,
+      format: result.format || (originalName ? originalName.split('.').pop() : ''),
       size: result.bytes,
       originalFilename: result.original_filename,
     };

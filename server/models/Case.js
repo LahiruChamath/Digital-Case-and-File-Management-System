@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const Counter  = require('./Counter');
 
 const caseSchema = new mongoose.Schema({
   title: {
@@ -75,6 +76,24 @@ const caseSchema = new mongoose.Schema({
     default: Date.now
   }
 });
+
+caseSchema.pre('validate', async function () {
+  if (!this.caseNumber) {
+    const counter = await Counter.findOneAndUpdate(
+      { _id: 'caseNumber' },
+      { $inc: { seq: 1 } },
+      { returnDocument: 'after', upsert: true }
+    );
+    this.caseNumber = `CASE-${String(counter.seq).padStart(5, '0')}`;
+  }
+});
+
+// Indexes for common query patterns
+caseSchema.index({ status: 1 });
+caseSchema.index({ client: 1 });
+caseSchema.index({ type: 1 });
+// Note: caseNumber is already indexed via unique:true on the field
+caseSchema.index({ status: 1, type: 1 });
 
 const Case = mongoose.model('Case', caseSchema);
 

@@ -55,6 +55,10 @@ const clientSchema = new mongoose.Schema({
   }
 });
 
+// Indexes for common query patterns
+// Note: email and identificationNumber are already indexed via unique:true on the fields
+clientSchema.index({ name: 1 });
+
 const Client = mongoose.model('Client', clientSchema);
 
 module.exports = Client;

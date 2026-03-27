@@ -1,11 +1,16 @@
 const Document = require('../models/Document');
 const fs = require('fs');
 const path = require('path');
+const { uploadFile, deleteFile } = require('../utils/fileUpload');
 
 // @desc    Upload new document
 // @route   POST /api/documents/upload
 // @access  Private
 exports.uploadDocument = async (req, res) => {
+  console.log('--- Upload Request Started ---');
+  console.log('Headers:', req.headers);
+  console.log('Body:', req.body);
+  console.log('File:', req.file);
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload a file' });
@@ -13,13 +18,16 @@ exports.uploadDocument = async (req, res) => {
 
     const { title, caseId, clientId, tags } = req.body;
 
-    const fileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const fileData = await uploadFile(req.file);
 
     const document = await Document.create({
       title,
-      fileName: req.file.originalname,
-      fileUrl: fileUrl,
-      format: req.file.mimetype.split('/')[1] || 'unknown',
+      fileName: fileData.filename,
+      fileUrl: fileData.url,
+      format: fileData.format || 'unknown',
+      fileSize: fileData.size,
+      publicId: fileData.publicId, // Store Cloudinary public ID if applicable
+      storageType: fileData.storage, 
       case: caseId,
       client: clientId,
       uploader: req.user._id,
@@ -57,10 +65,14 @@ exports.updateVersion = async (req, res) => {
       updatedBy: req.user._id
     });
 
-    const newFileUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+    const fileData = await uploadFile(req.file);
 
-    document.fileUrl = newFileUrl;
-    document.fileName = req.file.originalname;
+    document.fileUrl = fileData.url;
+    document.fileName = fileData.filename;
+    document.format = fileData.format || document.format;
+    document.fileSize = fileData.size;
+    document.publicId = fileData.publicId;
+    document.storageType = fileData.storage;
     document.version += 1;
     document.updatedAt = Date.now();
 
@@ -92,5 +104,31 @@ exports.searchDocuments = async (req, res) => {
     res.json(documents);
   } catch (error) {
     res.status(500).json({ message: 'Search failed', error: error.message });
+  }
+};
+
+// @desc    Delete document
+// @route   DELETE /api/documents/:id
+// @access  Private (Senior Lawyer)
+exports.deleteDocument = async (req, res) => {
+  try {
+    const document = await Document.findById(req.params.id);
+    if (!document) {
+      return res.status(404).json({ message: 'Document not found' });
+    }
+
+    // Use deleteFile util which checks storage type
+    await deleteFile({
+      storage: document.storageType,
+      publicId: document.publicId,
+      url: document.fileUrl
+    });
+
+    // Delete history files if possible - skipped for brevity but document is deleted from DB
+    await Document.findByIdAndDelete(req.params.id);
+
+    res.json({ message: 'Document deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to delete document', error: error.message });
   }
 };

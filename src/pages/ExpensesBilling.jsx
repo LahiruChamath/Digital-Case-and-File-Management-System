@@ -7,7 +7,8 @@ import {
   Clock,
   Download,
   MoreVertical,
-  DollarSign,
+  Banknote,
+  Check,
 } from 'lucide-react';
 import StatusBadge from '../components/common/StatusBadge';
 import { expenseService } from '../services/expenseService';
@@ -80,12 +81,34 @@ const ExpensesBilling = () => {
     try {
       const selectedCase = cases.find(c => c._id === expenseForm.caseId);
       await invoiceService.generateAndDownload(expenseForm.caseId, selectedCase?.caseNumber || 'INV');
-      showToast('Invoice generated successfully!', 'success');
-      fetchData(); // Auto reload to show the newly generated invoice in the table
+      showToast('Invoice generated and downloaded!', 'success');
+      fetchData();
     } catch (error) {
       showToast('Failed to generate invoice', 'error');
     } finally {
       setDownloading(false);
+    }
+  };
+
+  const handleDownloadInvoiceFromTable = async (inv) => {
+    setDownloading(true);
+    try {
+      await invoiceService.generateAndDownload(inv.case._id, inv.invoiceNumber);
+      showToast('Invoice downloaded successfully!', 'success');
+    } catch (error) {
+      showToast('Failed to download invoice', 'error');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleMarkAsPaid = async (id) => {
+    try {
+      await invoiceService.updateStatus(id, 'paid');
+      showToast('Invoice marked as paid!', 'success');
+      fetchData(); // Refresh to update charts & table
+    } catch (error) {
+      showToast('Failed to update invoice', 'error');
     }
   };
 
@@ -103,7 +126,7 @@ const ExpensesBilling = () => {
   const dynamicFinancialCards = [
     {
       label: 'Total Revenue',
-      value: sysStats ? `$${sysStats.totalRevenue.toFixed(2)}` : '$0.00',
+      value: sysStats ? `LKR ${sysStats.totalRevenue.toLocaleString()}` : 'LKR 0',
       change: 'Paid Invoices',
       icon: TrendingUp,
       iconBg: 'bg-green-50 text-green-600',
@@ -119,7 +142,7 @@ const ExpensesBilling = () => {
     },
     {
       label: 'Firm Expenses',
-      value: sysStats ? `$${sysStats.totalExpenses.toFixed(2)}` : '$0.00',
+      value: sysStats ? `LKR ${sysStats.totalExpenses.toLocaleString()}` : 'LKR 0',
       change: 'Logged Expenses',
       icon: TrendingDown,
       iconBg: 'bg-red-50 text-red-600',
@@ -198,13 +221,26 @@ const ExpensesBilling = () => {
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mt-1">{new Date(inv.createdAt).toLocaleDateString()}</p>
                     </td>
                     <td className="py-4 px-6 text-sm font-semibold text-gray-600">{inv.client?.name || 'Unknown Client'}</td>
-                    <td className="py-4 px-6 text-sm font-bold text-apple-text">${inv.totalAmount.toFixed(2)}</td>
+                    <td className="py-4 px-6 text-sm font-bold text-apple-text">LKR {inv.totalAmount.toLocaleString()}</td>
                     <td className="py-4 px-6">
                       <StatusBadge status={inv.status.charAt(0).toUpperCase() + inv.status.slice(1)} />
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-1">
-                        <button className="p-2 hover:bg-white rounded-lg transition-colors text-gray-400 hover:text-primary-600 shadow-sm border border-transparent hover:border-gray-200">
+                        {inv.status !== 'paid' && (
+                          <button 
+                            onClick={() => handleMarkAsPaid(inv._id)}
+                            className="p-2 hover:bg-white rounded-lg transition-colors text-status-active border border-transparent hover:border-status-active/20 hover:bg-status-active/5"
+                            title="Mark as Paid"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button 
+                          onClick={() => handleDownloadInvoiceFromTable(inv)}
+                          disabled={downloading}
+                          className="p-2 hover:bg-white rounded-lg transition-colors text-gray-400 hover:text-primary-600 shadow-sm border border-transparent hover:border-gray-200"
+                        >
                           <Download className="w-4 h-4" />
                         </button>
                         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-400 hover:text-gray-800">
@@ -240,10 +276,10 @@ const ExpensesBilling = () => {
               <div>
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">Amount</label>
                 <div className="relative group">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+                  <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
                   <input
                     type="number"
-                    step="0.01"
+                    step="1"
                     required
                     placeholder="0.00"
                     value={expenseForm.amount}
@@ -318,7 +354,7 @@ const ExpensesBilling = () => {
                     <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-[10px] font-bold tracking-wider uppercase">{exp.category}</span>
                   </td>
                   <td className="py-4 px-6 text-sm font-medium text-gray-600">{exp.case?.title || 'Unknown Case'}</td>
-                  <td className="py-4 px-6 text-sm font-bold text-apple-text text-right">${exp.amount.toFixed(2)}</td>
+                  <td className="py-4 px-6 text-sm font-bold text-apple-text text-right">LKR {exp.amount.toLocaleString()}</td>
                 </tr>
               ))}
               {expenses.length === 0 && (

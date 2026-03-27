@@ -12,7 +12,7 @@ exports.registerValidation = [
   body('name').trim().notEmpty().withMessage('Name is required'),
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('role').isIn(['Administrator', 'Attorney', 'Legal Staff']).withMessage('Invalid role'),
+  body('role').isIn(['Senior Lawyer', 'Junior Lawyer', 'Apprentice Lawyer']).withMessage('Invalid role'),
   validate
 ];
 

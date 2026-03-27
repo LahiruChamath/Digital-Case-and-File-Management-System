@@ -19,7 +19,7 @@ describe('Client API', () => {
       name: 'Legal Staff',
       email: 'staff@example.com',
       password: 'password123',
-      role: 'Legal Staff'
+      role: 'Senior Lawyer'
     });
     token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'secret');
   });

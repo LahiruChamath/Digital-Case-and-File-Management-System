@@ -10,14 +10,15 @@ import {
   Settings,
   LogOut,
   Bell,
-  Scale
+  Scale,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Avatar from '../common/Avatar';
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/matters', label: 'Matter Management', icon: Briefcase },
+  { path: '/cases', label: 'Case Management', icon: Briefcase },
   { path: '/clients', label: 'Client Profiles', icon: Users },
   { path: '/calendar', label: 'Court Calendar', icon: Calendar },
   { path: '/documents', label: 'Documents', icon: FileText },
@@ -25,7 +26,7 @@ const navItems = [
   { path: '/admin', label: 'Admin Panel', icon: Settings },
 ];
 
-const Sidebar = () => {
+const Sidebar = ({ isOpen, setIsOpen }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
@@ -37,24 +38,35 @@ const Sidebar = () => {
   if (!user) return null;
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-apple-surface border-r border-gray-200 flex flex-col z-50">
-      {/* Logo */}
-      <div className="px-6 py-6 border-b border-gray-100 flex items-center gap-3">
-        <div className="w-9 h-9 bg-primary-500 rounded-xl flex items-center justify-center text-white shadow-apple-sm">
-          <Scale className="w-5 h-5" />
+    <aside className={`fixed left-0 top-0 h-screen w-64 bg-apple-surface border-r border-gray-200 flex flex-col z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      {/* Logo Section - Match TopBar height and alignment */}
+      <div className="h-16 px-4 py-0 border-b border-gray-100 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary-500 rounded-xl shadow-lg shadow-primary-500/20">
+            <Scale className="w-5 h-5 text-white" />
+          </div>
+          <span className="text-xl font-bold text-apple-text tracking-tighter">W P Law</span>
         </div>
-        <div>
-          <h1 className="text-apple-text font-bold text-base leading-tight">W P Law</h1>
-          <p className="text-apple-textMuted text-[10px] uppercase tracking-widest mt-0.5 font-semibold">Digital Case and File Management System</p>
-        </div>
+        
+        {/* Mobile close button - Aligned with the menu button in TopBar */}
+        <button 
+          onClick={() => setIsOpen(false)}
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        {navItems.map((item) => (
+        {navItems.filter(item => {
+          if ((item.path === '/expenses' || item.path === '/admin') && user?.role !== 'Senior Lawyer') return false;
+          return true;
+        }).map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
+            onClick={() => setIsOpen(false)}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                 isActive 
@@ -72,10 +84,10 @@ const Sidebar = () => {
       {/* User Profile */}
       <div className="px-5 py-5 border-t border-gray-100">
         <div className="flex items-center gap-3 mb-4">
-           <Avatar initials={user.name.split(' ').map(n => n[0]).join('')} size="md" />
+           <Avatar initials={(user?.name || 'User').split(' ').map(n => n[0]).join('')} size="md" />
           <div className="flex-1 min-w-0">
-            <p className="text-apple-text text-sm font-semibold truncate">{user.name}</p>
-            <p className="text-apple-textMuted text-[11px] truncate uppercase tracking-widest font-semibold">{user.role}</p>
+            <p className="text-apple-text text-sm font-semibold truncate">{user?.name || 'User'}</p>
+            <p className="text-apple-textMuted text-[11px] truncate uppercase tracking-widest font-semibold">{user?.role || 'Guest'}</p>
           </div>
           <button className="text-gray-400 hover:text-apple-text transition-colors rounded-full p-1.5 hover:bg-gray-100">
             <Bell className="w-4 h-4" />

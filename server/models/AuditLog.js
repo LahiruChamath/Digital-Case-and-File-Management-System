@@ -4,21 +4,33 @@ const auditLogSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false // Can be null for system actions
+  },
+  userName: {
+    type: String
   },
   action: {
     type: String,
-    required: true // e.g., 'LOGIN', 'DELETE_CASE', 'UPDATE_USER'
+    required: true
   },
-  details: {
+  resourceType: {
     type: String
   },
-  ipAddress: String,
+  resourceId: {
+    type: String
+  },
+  details: {
+    type: mongoose.Schema.Types.Mixed
+  },
   timestamp: {
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
+
+auditLogSchema.index({ timestamp: -1 });
 
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 

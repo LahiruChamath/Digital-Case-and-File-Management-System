@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Bell, CheckCircle, Info, AlertCircle } from 'lucide-react';
+import { Bell, CheckCircle, Info, AlertCircle, Menu } from 'lucide-react';
 import Avatar from '../common/Avatar';
 import { notificationService } from '../../services/notificationService';
 
 const breadcrumbMap = {
   '/dashboard': 'Dashboard Overview',
-  '/matters': 'Matter Management',
+  '/cases': 'Case Management',
   '/clients': 'Client Profiles',
   '/calendar': 'Court Calendar',
   '/documents': 'Document Repository',
@@ -14,7 +14,7 @@ const breadcrumbMap = {
   '/admin': 'System Administration',
 };
 
-const TopBar = () => {
+const TopBar = ({ onToggleSidebar }) => {
   const location = useLocation();
   const currentPage = breadcrumbMap[location.pathname] || 'Dashboard';
   
@@ -69,12 +69,20 @@ const TopBar = () => {
   };
 
   return (
-    <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 sticky top-0 z-40 transition-all">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm">
-        <span className="text-apple-textMuted font-semibold tracking-wider text-[11px] uppercase">W P Law</span>
-        <span className="text-gray-300">/</span>
-        <span className="text-apple-text font-bold">{currentPage}</span>
+    <header className="h-16 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 sticky top-0 z-40 transition-all">
+      {/* Search and Menu */}
+      <div className="flex items-center gap-4">
+        <button 
+          onClick={onToggleSidebar}
+          className="p-2 hover:bg-gray-100 rounded-lg text-gray-500 transition-colors"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-apple-textMuted font-semibold tracking-wider text-[11px] uppercase hidden md:inline">W P Law</span>
+          <span className="text-gray-300 hidden md:inline">/</span>
+          <span className="text-apple-text font-bold whitespace-nowrap">{currentPage}</span>
+        </div>
       </div>
 
       {/* Right side */}

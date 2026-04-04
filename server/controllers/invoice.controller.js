@@ -3,6 +3,7 @@ const Invoice = require('../models/Invoice');
 const Case = require('../models/Case');
 const Expense = require('../models/Expense');
 const Client = require('../models/Client');
+const { createNotification } = require('../utils/notificationUtility');
 
 // @desc    Generate PDF Invoice
 // @route   GET /api/invoices/generate/:caseId
@@ -140,6 +141,18 @@ exports.updateInvoiceStatus = async (req, res) => {
     }
     const invoice = await Invoice.findByIdAndUpdate(req.params.id, updateData, { returnDocument: 'after' });
     if (!invoice) return res.status(404).json({ message: 'Invoice not found' });
+
+    // Notify the senior lawyer about the payment
+    if (status === 'paid') {
+      await createNotification({
+        recipient: invoice.generatedBy, // Notify the person who generated it
+        title: 'Invoice Paid',
+        message: `Invoice ${invoice.invoiceNumber} for LKR ${invoice.totalAmount.toLocaleString()} has been marked as paid.`,
+        type: 'System',
+        relatedCase: invoice.case
+      });
+    }
+
     res.json(invoice);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update invoice', error: error.message });

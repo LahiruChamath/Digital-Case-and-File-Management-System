@@ -1,24 +1,36 @@
 const nodemailer = require('nodemailer');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const transporter = (process.env.EMAIL_USER && process.env.EMAIL_PASS) 
+  ? nodemailer.createTransport({
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+      port: process.env.EMAIL_PORT || 587,
+      secure: false,
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    })
+  : null;
+
+if (!transporter) {
+  console.warn('⚠️ Email credentials missing. Email service will be disabled.');
+}
 
 const sendEmail = async ({ to, subject, html, text }) => {
   try {
     const mailOptions = {
-      from: `"${process.env.EMAIL_FROM_NAME || 'Legal Case Management'}" <${process.env.EMAIL_USER}>`,
+      from: `"${process.env.EMAIL_FROM_NAME || 'Legal Case Management'}" <${process.env.EMAIL_USER || 'noreply@example.com'}>`,
       to,
       subject,
       html,
       text,
     };
+    
+    if (!transporter) {
+      console.log(`[MOCK EMAIL] would send to ${to}: ${subject}`);
+      return { messageId: 'mock-id-' + Date.now() };
+    }
+
     const info = await transporter.sendMail(mailOptions);
     console.log(`Email sent: ${info.messageId}`);
     return info;

@@ -64,6 +64,7 @@ const TopBar = ({ onToggleSidebar }) => {
     switch(type) {
       case 'System': return <Info className="w-4 h-4 text-blue-500" />;
       case 'Alert': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'Task': return <CheckCircle className="w-4 h-4 text-status-active" />;
       default: return <Info className="w-4 h-4 text-gray-400" />;
     }
   };

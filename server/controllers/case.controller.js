@@ -1,5 +1,6 @@
 const Case = require('../models/Case');
 const { sendEmail } = require('../config/email');
+const { createNotification } = require('../utils/notificationUtility');
 
 // @desc    Create new case
 // @route   POST /api/cases
@@ -35,6 +36,17 @@ exports.createCase = async (req, res) => {
       });
     } catch (e) {
       console.error('Email sending failed for case creation', e);
+    }
+
+    // Create system notifications for assigned lawyers
+    if (newCase.assignedTo && newCase.assignedTo.length > 0) {
+      await createNotification({
+        recipient: newCase.assignedTo,
+        title: 'New Case Assignment',
+        message: `You have been assigned to a new case: ${populated.caseNumber || populated.title}`,
+        type: 'Task',
+        relatedCase: newCase._id
+      });
     }
 
     res.status(201).json(populated);
@@ -82,6 +94,18 @@ exports.updateCaseStatus = async (req, res) => {
       },
       { returnDocument: 'after' }
     );
+
+    // Notify assigned lawyers
+    if (updatedCase.assignedTo && updatedCase.assignedTo.length > 0) {
+      await createNotification({
+        recipient: updatedCase.assignedTo,
+        title: 'Case Status Updated',
+        message: `Case ${updatedCase.caseNumber} status has been changed to ${status}`,
+        type: 'Alert',
+        relatedCase: updatedCase._id
+      });
+    }
+
     res.json(updatedCase);
   } catch (error) {
     res.status(500).json({ message: 'Failed to update status', error: error.message });
@@ -146,6 +170,18 @@ exports.closeCase = async (req, res) => {
       { returnDocument: 'after' }
     ).populate('client', 'name');
     if (!closedCase) return res.status(404).json({ message: 'Case not found' });
+
+    // Notify assigned lawyers
+    if (closedCase.assignedTo && closedCase.assignedTo.length > 0) {
+      await createNotification({
+        recipient: closedCase.assignedTo,
+        title: 'Case Closed',
+        message: `Case ${closedCase.caseNumber} has been officially closed.`,
+        type: 'System',
+        relatedCase: closedCase._id
+      });
+    }
+
     res.json(closedCase);
   } catch (error) {
     res.status(500).json({ message: 'Failed to close case', error: error.message });

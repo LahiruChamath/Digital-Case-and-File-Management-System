@@ -2,15 +2,13 @@ const Document = require('../models/Document');
 const fs = require('fs');
 const path = require('path');
 const { uploadFile, deleteFile } = require('../utils/fileUpload');
+const { createNotification } = require('../utils/notificationUtility');
+const Case = require('../models/Case');
 
 // @desc    Upload new document
 // @route   POST /api/documents/upload
 // @access  Private
 exports.uploadDocument = async (req, res) => {
-  console.log('--- Upload Request Started ---');
-  console.log('Headers:', req.headers);
-  console.log('Body:', req.body);
-  console.log('File:', req.file);
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Please upload a file' });
@@ -33,6 +31,18 @@ exports.uploadDocument = async (req, res) => {
       uploader: req.user._id,
       tags: tags ? tags.split(',') : []
     });
+
+    // Notify lawyers assigned to the case
+    const legalCase = await Case.findById(caseId);
+    if (legalCase && legalCase.assignedTo && legalCase.assignedTo.length > 0) {
+      await createNotification({
+        recipient: legalCase.assignedTo,
+        title: 'New Document Uploaded',
+        message: `A new document "${title}" has been uploaded to case ${legalCase.caseNumber}`,
+        type: 'System',
+        relatedCase: caseId
+      });
+    }
 
     res.status(201).json(document);
   } catch (error) {
@@ -77,6 +87,18 @@ exports.updateVersion = async (req, res) => {
     document.updatedAt = Date.now();
 
     await document.save();
+
+    // Notify lawyers assigned to the case
+    const legalCase = await Case.findById(document.case);
+    if (legalCase && legalCase.assignedTo && legalCase.assignedTo.length > 0) {
+      await createNotification({
+        recipient: legalCase.assignedTo,
+        title: 'Document Version Updated',
+        message: `Document "${document.title}" version has been updated (v${document.version})`,
+        type: 'System',
+        relatedCase: document.case
+      });
+    }
 
     res.json(document);
   } catch (error) {

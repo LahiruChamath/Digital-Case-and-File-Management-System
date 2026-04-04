@@ -435,10 +435,7 @@ const LoginPage = () => {
           <blockquote className="text-white text-3xl font-semibold leading-snug mb-8 tracking-tight">
             "W P Law defines the modern approach to legal management. The interface is remarkably intuitive and responsive."
           </blockquote>
-          <div>
-            <p className="text-white font-bold tracking-wide">Eleanor Vance</p>
-            <p className="text-gray-300 text-sm font-medium mt-1 uppercase tracking-wider">Managing Partner, Vance & Associates</p>
-          </div>
+          
         </div>
       </div>
 
